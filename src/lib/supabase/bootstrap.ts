@@ -108,9 +108,6 @@ export async function bootstrapSupabaseContent(force = false) {
     countRows("experiences"),
     countRows("activity"),
   ]);
-  // #region agent log
-  fetch('http://127.0.0.1:7684/ingest/883ea70a-a31d-4ff8-9e1b-48ba240c0918',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'76cce1'},body:JSON.stringify({sessionId:'76cce1',runId:'initial',hypothesisId:'H3',location:'src/lib/supabase/bootstrap.ts:100',message:'Bootstrap content counts',data:{force,projectCount,experienceCount,activityCount},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
   if (!force && (projectCount > 0 || experienceCount > 0 || activityCount > 0)) {
     return {
@@ -128,9 +125,6 @@ export async function bootstrapSupabaseContent(force = false) {
     loadExperiencesSource(),
     loadActivitySource(),
   ]);
-  // #region agent log
-  fetch('http://127.0.0.1:7684/ingest/883ea70a-a31d-4ff8-9e1b-48ba240c0918',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'76cce1'},body:JSON.stringify({sessionId:'76cce1',runId:'initial',hypothesisId:'H4',location:'src/lib/supabase/bootstrap.ts:117',message:'Bootstrap source ids',data:{projectIds:projectsSource.slice(0,5).map((project)=>project._id),experienceIds:experiencesSource.slice(0,5).map((item)=>item._id),activityIds:activitySource.slice(0,5).map((item)=>item._id)},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
   const projects = await Promise.all(
     projectsSource.map(async (project) => ({

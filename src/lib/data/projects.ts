@@ -6,7 +6,7 @@ import { seedData } from "@/data/seed";
 import { deleteAsset, PROJECTS_BUCKET, uploadAsset } from "@/lib/supabase/assets";
 import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase/client";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
-import { ensureUuid, isUuid } from "@/lib/supabase/ids";
+import { ensureUuid } from "@/lib/supabase/ids";
 
 type ProjectRow = {
   id: string;
@@ -78,7 +78,6 @@ export async function readProjectsFile(): Promise<Project[]> {
 
 export async function writeProjectsFile(projects: Project[]) {
   const client = getSupabaseAdminClient();
-  const originalIds = projects.map((project) => project._id);
   const payload = projects.map((project) => ({
     id: ensureUuid(project._id),
     title: project.title,
@@ -95,9 +94,6 @@ export async function writeProjectsFile(projects: Project[]) {
     client: project.client || null,
     live_url: project.liveUrl || null,
   }));
-  // #region agent log
-  fetch('http://127.0.0.1:7684/ingest/883ea70a-a31d-4ff8-9e1b-48ba240c0918',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'76cce1'},body:JSON.stringify({sessionId:'76cce1',runId:'post-fix',hypothesisId:'H1',location:'src/lib/data/projects.ts:writeProjectsFile',message:'Writing project payload batch',data:{count:payload.length,originalInvalidIds:originalIds.filter((id)=>!isUuid(id)),payloadInvalidIds:payload.filter((project)=>!isUuid(project.id)).map((project)=>project.id),sampleIds:payload.slice(0,5).map((project)=>project.id)},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const { error } = await client.from("projects").upsert(payload, { onConflict: "id" });
   if (error) throw new Error(`Could not write projects: ${error.message}`);
 }
@@ -189,9 +185,6 @@ export async function createProject(
 ): Promise<Project> {
   const storedRows = await readProjectRows();
   const projects = storedRows.map(mapProject);
-  // #region agent log
-  fetch('http://127.0.0.1:7684/ingest/883ea70a-a31d-4ff8-9e1b-48ba240c0918',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'76cce1'},body:JSON.stringify({sessionId:'76cce1',runId:'initial',hypothesisId:'H2',location:'src/lib/data/projects.ts:190',message:'Create project branch state',data:{storedRowCount:storedRows.length,seedFallback:storedRows.length===0,inputTitle:input.title},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const slug = slugify(input.slug || input.title);
   if (!slug) throw new Error("Title or slug is required");
   if (projects.some((p) => p.slug === slug)) {
