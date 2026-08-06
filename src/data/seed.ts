@@ -1,0 +1,367 @@
+import type { PortfolioData } from "@/lib/types";
+
+const covers = {
+  aurora:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRy0k5QnbVH-KVZ1Oh0hDVepl0ChBNJO5SDyen2Z1TKZQ&s=10",
+  neon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTw2MrFunrB993Y_kPcs6zsiSj4EY7d69x8652_HNCdXw&s=10",
+  studio:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStSegzJVN3Idd_18lZeWc-uK_5-ypEYn03cOLTnrJbmQ&s=10",
+  city: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3E5bElR4AyPXPLg8KbS3M5GrRWVPwVCqFd-Q7sv77Cg&s=10",
+  product:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDCBA99kT3nhgdSuPOwOgrqpGfsigC8xxZIKqnIpaHMA&s=10",
+  portrait:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIQxq1bHMkBuSlgjxPs0T9HC_pQf0W72PJ4L_RaZrVew&s=10",
+  article1:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfYOGKkWgznxHFvW3E8eNUL8NDeO15WojyOg0g4VXkNw&s=10",
+  article2:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8xuYKbiU68x-SdB2ozf-uDXYF7TBlJc1q-tQugz7cfA&s=10",
+  article3:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdewSD6umTkmL58auESbdwXN1K7qgo-CeqYgh_EY1Glg&s=10",
+};
+
+export const seedData: PortfolioData = {
+  settings: {
+    name: "Lynn Htet Thant",
+    role: "Product Designer & Engineer",
+    tagline: "Listening to users, building for future.",
+    email: "lynnhtetthant@gmail.com",
+    location: "Remote · Worldwide",
+    socials: [
+      { label: "GitHub", url: "https://github.com" },
+      { label: "LinkedIn", url: "https://linkedin.com" },
+      { label: "Dribbble", url: "https://dribbble.com" },
+      { label: "X", url: "https://x.com" },
+    ],
+    resumePdfUrl: "/resume.pdf",
+    experiencePoster: "/experience-poster.png",
+    summary:
+      "A passionate UX designer with 5 years of experience creating user-centered interfaces and applications. Skilled in the entire design process, from user research and prototyping to usability testing and implementation. Equally enthusiastic about sharing knowledge and fostering the next generation of UX professionals.",
+  },
+  projects: [
+    {
+      _id: "p1",
+      title: "Sedona Loyalty Mobile App",
+      slug: "sedona-loyalty-mobile-app",
+      cover: covers.aurora,
+      tags: ["Product Design", "Design System"],
+      excerpt:
+        "A content platform redesign that cut time-to-publish by 40% while elevating the brand for millions of viewers.",
+      body: "Streamline OS was a full-stack product redesign for a media company migrating from legacy tooling. I led discovery, IA, high-fidelity UI, and front-end implementation with a cross-functional team. We introduced a Netflix-inspired browsing model for internal assets, role-based workflows, and a shared component library that became the company design system.",
+      featured: true,
+      year: "2025",
+      role: "Lead Product Designer & Engineer",
+      client: "Sedona",
+      liveUrl: "https://apps.apple.com/mm/app/sedona-yangon-loyalty-program/id6502490113",
+    },
+    {
+      _id: "p2",
+      title: "Pulse Analytics",
+      slug: "pulse-analytics",
+      cover: covers.neon,
+      tags: ["Dashboard", "Data Viz", "UX"],
+      excerpt:
+        "Real-time analytics that feels cinematic — dense data without cognitive overload.",
+      body: "Pulse Analytics reframes B2B dashboards as a guided narrative. Motion cues highlight anomalies; progressive disclosure keeps power users fast and newcomers oriented. Built with React, D3, and a token-driven design system.",
+      featured: true,
+      year: "2024",
+      role: "Product Designer",
+      client: "Northstar Labs",
+    },
+    {
+      _id: "p3",
+      title: "Atelier Commerce",
+      slug: "atelier-commerce",
+      cover: covers.studio,
+      tags: ["E-commerce", "Brand", "Motion"],
+      excerpt:
+        "A luxury retail experience with intentional motion and ATS-ready case study documentation.",
+      body: "End-to-end brand and storefront for an independent label. Focused on tactile micro-interactions, accessible checkout flows, and a CMS-powered editorial layer.",
+      featured: false,
+      year: "2024",
+      role: "Design Engineer",
+      client: "Atelier Co.",
+    },
+    {
+      _id: "p4",
+      title: "Vault Banking",
+      slug: "vault-banking",
+      cover: covers.city,
+      tags: ["Fintech", "Mobile", "Accessibility"],
+      excerpt:
+        "Mobile-first banking with WCAG 2.2 AA compliance and calm, trustworthy visuals.",
+      body: "Redesigned core money-movement flows for a digital bank. Reduced drop-off in transfers by clarifying hierarchy and introducing confidence states throughout the journey.",
+      featured: false,
+      year: "2023",
+      role: "Senior Product Designer",
+      client: "Vault",
+    },
+    {
+      _id: "p5",
+      title: "Orbit Docs",
+      slug: "orbit-docs",
+      cover: covers.product,
+      tags: ["Developer Tools", "IA", "Frontend"],
+      excerpt:
+        "Documentation that developers actually enjoy — search-first IA and live code previews.",
+      body: "Information architecture overhaul and Next.js rebuild for a developer platform docs site. Improved search relevance and reading continuity with sticky TOC and progress cues.",
+      featured: true,
+      year: "2023",
+      role: "Design Engineer",
+    },
+  ],
+  skills: [
+    { _id: "s1", name: "Product Design", category: "Design", level: 95 },
+    { _id: "s2", name: "Interaction Design", category: "Design", level: 92 },
+    { _id: "s3", name: "Design Systems", category: "Design", level: 90 },
+    { _id: "s4", name: "Figma", category: "Design", level: 95 },
+    { _id: "s5", name: "User Research", category: "Design", level: 85 },
+    { _id: "s6", name: "Accessibility (WCAG)", category: "Design", level: 88 },
+    { _id: "s7", name: "TypeScript", category: "Engineering", level: 90 },
+    { _id: "s8", name: "React / Next.js", category: "Engineering", level: 92 },
+    { _id: "s9", name: "Tailwind CSS", category: "Engineering", level: 90 },
+    { _id: "s10", name: "Framer Motion", category: "Engineering", level: 88 },
+    { _id: "s11", name: "Node.js", category: "Engineering", level: 78 },
+    { _id: "s12", name: "GROQ / Sanity", category: "Engineering", level: 80 },
+    { _id: "s13", name: "Roadmapping", category: "Strategy", level: 85 },
+    { _id: "s14", name: "Stakeholder Facilitation", category: "Strategy", level: 88 },
+    { _id: "s15", name: "A/B Testing", category: "Strategy", level: 82 },
+  ],
+  experiences: [
+    {
+      _id: "e1",
+      company: "KBZ Bank",
+      title: "User Experience Lead",
+      location: "Yangon, Myanmar",
+      startDate: "2025-11",
+      current: true,
+      employmentType: "Full-time",
+      workMode: "On-site",
+      companyLogo: "",
+      description:
+        "Lead UX for digital banking experiences across mobile and web products.",
+      highlights: [
+        "Owns end-to-end UX for priority banking journeys",
+        "Partners with product and engineering on delivery",
+      ],
+    },
+    {
+      _id: "e2",
+      company: "UXMM",
+      title: "Member",
+      location: "Yangon, Myanmar",
+      startDate: "2024-12",
+      endDate: "2026-02",
+      current: false,
+      employmentType: "Part-time",
+      workMode: "Hybrid",
+      companyLogo: "",
+      description: "Community member contributing to UX practice and events.",
+      highlights: [],
+    },
+    {
+      _id: "e3",
+      company: "BIM Group of Companies",
+      title: "UX/UI Designer",
+      location: "Yangon, Myanmar",
+      startDate: "2024-05",
+      endDate: "2025-10",
+      current: false,
+      employmentType: "Full-time",
+      workMode: "Hybrid",
+      companyLogo: "",
+      description:
+        "Designed product interfaces and improved usability across company apps.",
+      highlights: [],
+    },
+    {
+      _id: "e4",
+      company: "MM PROJECT",
+      title: "UX Design Instructor",
+      location: "Yangon, Myanmar",
+      startDate: "2024-03",
+      endDate: "2025-06",
+      current: false,
+      employmentType: "Contract",
+      workMode: "On-site",
+      companyLogo: "",
+      description: "Taught UX design fundamentals and portfolio craft.",
+      highlights: [],
+    },
+    {
+      _id: "e5",
+      company: "Acodemy",
+      title: "UX Design Instructor",
+      location: "Yangon, Myanmar",
+      startDate: "2023-04",
+      endDate: "2024-12",
+      current: false,
+      employmentType: "Freelance",
+      workMode: "Remote",
+      companyLogo: "",
+      description: "Mentored designers through project-based UX courses.",
+      highlights: [],
+    },
+  ],
+  services: [
+    {
+      _id: "sv1",
+      title: "Product Design",
+      description:
+        "Discovery through polished UI — research, flows, prototypes, and handoff that engineers love.",
+      deliverables: [
+        "User flows & wireframes",
+        "High-fidelity UI",
+        "Interactive prototypes",
+        "Design specs",
+      ],
+    },
+    {
+      _id: "sv2",
+      title: "Design Engineering",
+      description:
+        "I implement the interfaces I design in Next.js — pixel-faithful, animated, production-ready.",
+      deliverables: [
+        "Next.js / React UI",
+        "Motion systems",
+        "Design tokens",
+        "Component libraries",
+      ],
+    },
+    {
+      _id: "sv3",
+      title: "Design Systems",
+      description:
+        "Scalable foundations: tokens, components, documentation, and governance for growing teams.",
+      deliverables: [
+        "Token architecture",
+        "Figma + code libraries",
+        "Usage guidelines",
+        "Adoption workshops",
+      ],
+    },
+    {
+      _id: "sv4",
+      title: "UX Audits",
+      description:
+        "Focused reviews of conversion, clarity, and accessibility with a prioritized action plan.",
+      deliverables: [
+        "Heuristic evaluation",
+        "Accessibility report",
+        "Opportunity map",
+        "Quick-win backlog",
+      ],
+    },
+  ],
+  activity: [
+    {
+      _id: "a1",
+      type: "ship",
+      title: "Launched Streamline OS v2",
+      date: "2025-11-12",
+      summary: "Major release with billboard browsing and role-based workflows.",
+      thumbnail: covers.aurora,
+      link: "/work/streamline-os",
+    },
+    {
+      _id: "a2",
+      type: "write",
+      title: "Published: Motion that earns its keep",
+      date: "2025-10-02",
+      summary: "Essay on intentional motion budgets for product UI.",
+      thumbnail: covers.article1,
+      link: "/articles/motion-that-earns-its-keep",
+    },
+    {
+      _id: "a3",
+      type: "speak",
+      title: "Spoke at DesignOps Summit",
+      date: "2025-06-18",
+      summary: "Talk on bridging design systems and front-end ownership.",
+      thumbnail: covers.neon,
+    },
+    {
+      _id: "a4",
+      type: "award",
+      title: "Awwwards Honorable Mention",
+      date: "2024-09-04",
+      summary: "Recognition for Atelier Commerce motion experience.",
+      thumbnail: covers.studio,
+      link: "/work/atelier-commerce",
+    },
+    {
+      _id: "a5",
+      type: "milestone",
+      title: "Joined Horizon Media as Lead",
+      date: "2023-01-09",
+      summary: "Started leading product design and engineering for content tools.",
+      thumbnail: covers.city,
+    },
+  ],
+  articles: [
+    {
+      _id: "ar1",
+      title: "Motion that earns its keep",
+      slug: "motion-that-earns-its-keep",
+      cover: covers.article1,
+      excerpt:
+        "How to budget animations so every transition clarifies hierarchy instead of decorating noise.",
+      body: "Great product motion is invisible until you remove it. I use a simple budget: one hero entrance, one shared-element transition, and a handful of feedback cues. Everything else must justify itself against clarity, hierarchy, or delight that supports the brand. Netflix-style rows work because the hover scale tells you what is interactive and what belongs together — not because scale is fashionable.",
+      tags: ["Motion", "UX", "Frontend"],
+      publishedAt: "2025-10-02",
+    },
+    {
+      _id: "ar2",
+      title: "ATS resumes without looking like paperwork",
+      slug: "ats-resumes-without-paperwork",
+      cover: covers.article2,
+      excerpt:
+        "Semantic HTML, single columns, and keyword density — while still feeling designed.",
+      body: "Applicant tracking systems still choke on multi-column layouts, icons-as-text, and text embedded in images. The fix is not ugly PDFs — it is semantic structure: one column, real headings, plain skill lists, and a matching print stylesheet. Your portfolio can be cinematic; your resume should be parseable.",
+      tags: ["Career", "Writing"],
+      publishedAt: "2025-07-21",
+    },
+    {
+      _id: "ar3",
+      title: "Design systems that ship in the same PR",
+      slug: "design-systems-that-ship",
+      cover: covers.article3,
+      excerpt:
+        "Why token-first systems and design-engineer ownership beat Figma-only libraries.",
+      body: "When the source of truth lives only in Figma, drift is inevitable. Pair tokens in code with components that designers can preview in Storybook or the app itself. Ship system changes in the same PR as the feature that needs them — adoption follows usefulness.",
+      tags: ["Design Systems", "Engineering"],
+      publishedAt: "2025-03-14",
+    },
+  ],
+  about: {
+    headline: "I build products that feel inevitable.",
+    bio: [
+      "I'm Lynn Htet Thant — a product designer and engineer who treats the interface like a cinematic experience without sacrificing clarity or accessibility.",
+      "Over eight years I've shipped consumer apps, fintech flows, developer tools, and media platforms. I care about the seam between Figma and production: tokens, motion, and code that stay in sync.",
+      "When I'm not designing, I'm writing about craft, mentoring designers who code, and chasing the perfect scroll-triggered reveal.",
+    ],
+    portrait: covers.portrait,
+    values: [
+      {
+        title: "Clarity first",
+        description: "Motion and visuals serve hierarchy — never the other way around.",
+      },
+      {
+        title: "Ship the craft",
+        description: "I implement what I design so quality survives the handoff.",
+      },
+      {
+        title: "Inclusive by default",
+        description: "WCAG, reduced motion, and keyboard paths are part of the brief.",
+      },
+    ],
+  },
+  education: [
+    {
+      _id: "ed1",
+      school: "Rhode Island School of Design",
+      degree: "BFA Graphic Design",
+      year: "2017",
+      details: "Focus in interaction design and typography",
+    },
+  ],
+};

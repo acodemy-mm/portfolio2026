@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +40,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+public/uploads/projects/*
+!public/uploads/projects/.gitkeep
+data/projects.json
+
+public/uploads/experiences/*
+!public/uploads/experiences/.gitkeep
+data/experiences.json
+data/activity.json
+
+public/uploads/activity/*
+!public/uploads/activity/.gitkeep
