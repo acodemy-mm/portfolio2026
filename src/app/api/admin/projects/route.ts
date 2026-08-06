@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin/auth";
+import { revalidatePortfolioContent } from "@/lib/cache/portfolio";
 import {
   createProject,
   readProjectsFile,
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       );
     }
     const project = await createProject(input, filesFromForm(form));
+    revalidatePortfolioContent(project.slug);
     return NextResponse.json({ ok: true, project });
   } catch (err) {
     return NextResponse.json(

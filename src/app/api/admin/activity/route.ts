@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin/auth";
+import { revalidatePortfolioContent } from "@/lib/cache/portfolio";
 import { seedData } from "@/data/seed";
 import {
   createActivity,
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
     const thumbnailFile =
       thumb instanceof File && thumb.size > 0 ? thumb : null;
     const activity = await createActivity(inputFromForm(form), thumbnailFile);
+    revalidatePortfolioContent();
     return NextResponse.json({ ok: true, activity });
   } catch (err) {
     return NextResponse.json(

@@ -5,6 +5,9 @@ import { Footer } from "@/components/layout/Footer";
 import { getPortfolioData } from "@/lib/data/portfolio";
 import "./globals.css";
 
+/** Always read live CMS data from Supabase (not build-time static HTML). */
+export const dynamic = "force-dynamic";
+
 const bebas = Bebas_Neue({
   weight: "400",
   subsets: ["latin"],

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin/auth";
+import { revalidatePortfolioContent } from "@/lib/cache/portfolio";
 import { seedData } from "@/data/seed";
 import {
   createExperience,
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
     const logo = form.get("companyLogo");
     const logoFile = logo instanceof File && logo.size > 0 ? logo : null;
     const experience = await createExperience(inputFromForm(form), logoFile);
+    revalidatePortfolioContent();
     return NextResponse.json({ ok: true, experience });
   } catch (err) {
     return NextResponse.json(

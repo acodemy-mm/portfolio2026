@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/admin/auth";
+import { revalidatePortfolioContent } from "@/lib/cache/portfolio";
 import {
   deleteProject,
   updateProject,
@@ -53,6 +54,7 @@ export async function PUT(request: Request, ctx: Ctx) {
   try {
     const form = await request.formData();
     const project = await updateProject(id, inputFromForm(form), filesFromForm(form));
+    revalidatePortfolioContent(project.slug);
     return NextResponse.json({ ok: true, project });
   } catch (err) {
     return NextResponse.json(
@@ -74,6 +76,7 @@ export async function DELETE(_request: Request, ctx: Ctx) {
 
   try {
     await deleteProject(id);
+    revalidatePortfolioContent();
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json(
