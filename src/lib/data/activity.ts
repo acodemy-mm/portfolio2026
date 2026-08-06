@@ -1,12 +1,11 @@
-import { promises as fs } from "fs";
-import path from "path";
+import "server-only";
+
 import { randomUUID } from "crypto";
 import { seedData } from "@/data/seed";
 import type { ActivityItem } from "@/lib/types";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const FILE = path.join(DATA_DIR, "activity.json");
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "activity");
+import { ACTIVITY_BUCKET, deleteAsset, uploadAsset } from "@/lib/supabase/assets";
+import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase/client";
+import { hasSupabaseEnv } from "@/lib/supabase/config";
 
 const TYPES: ActivityItem["type"][] = [
   "ship",
@@ -16,25 +15,66 @@ const TYPES: ActivityItem["type"][] = [
   "milestone",
 ];
 
-async function ensureDirs() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+type ActivityRow = {
+  id: string;
+  type: ActivityItem["type"];
+  title: string;
+  date: string;
+  summary: string;
+  thumbnail: string | null;
+  link: string | null;
+  created_at: string;
+};
+
+function isMissingRelationError(error: { code?: string } | null) {
+  return error?.code === "42P01";
+}
+
+function mapActivity(row: ActivityRow): ActivityItem {
+  return {
+    _id: row.id,
+    type: row.type,
+    title: row.title,
+    date: row.date,
+    summary: row.summary,
+    thumbnail: row.thumbnail || undefined,
+    link: row.link || undefined,
+  };
+}
+
+async function readActivityRows(): Promise<ActivityRow[]> {
+  if (!hasSupabaseEnv()) return [];
+  const client = getSupabasePublicClient();
+  const { data, error } = await client
+    .from("activity")
+    .select("*")
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (error) {
+    if (isMissingRelationError(error)) return [];
+    throw new Error(`Could not load activity: ${error.message}`);
+  }
+  return (data || []) as ActivityRow[];
 }
 
 export async function readActivityFile(): Promise<ActivityItem[]> {
-  await ensureDirs();
-  try {
-    const raw = await fs.readFile(FILE, "utf8");
-    const parsed = JSON.parse(raw) as ActivityItem[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  const rows = await readActivityRows();
+  return rows.map(mapActivity);
 }
 
 export async function writeActivityFile(items: ActivityItem[]) {
-  await ensureDirs();
-  await fs.writeFile(FILE, JSON.stringify(items, null, 2), "utf8");
+  const client = getSupabaseAdminClient();
+  const payload = items.map((item) => ({
+    id: item._id,
+    type: item.type,
+    title: item.title,
+    date: item.date,
+    summary: item.summary,
+    thumbnail: item.thumbnail || null,
+    link: item.link || null,
+  }));
+  const { error } = await client.from("activity").upsert(payload, { onConflict: "id" });
+  if (error) throw new Error(`Could not write activity: ${error.message}`);
 }
 
 export async function getStoredActivity(): Promise<ActivityItem[]> {
@@ -62,38 +102,21 @@ function sortActivity(items: ActivityItem[]) {
   return [...items].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
 
-export async function saveActivityThumbnail(file: File): Promise<string> {
-  await ensureDirs();
-  const ext = path.extname(file.name) || ".jpg";
-  const safeExt = ext.match(/^\.(jpe?g|png|webp|gif|avif)$/i) ? ext : ".jpg";
-  const filename = `${Date.now()}-${randomUUID().slice(0, 8)}${safeExt.toLowerCase()}`;
-  await fs.writeFile(
-    path.join(UPLOAD_DIR, filename),
-    Buffer.from(await file.arrayBuffer()),
-  );
-  return `/uploads/activity/${filename}`;
-}
-
 async function deleteThumbnail(url?: string) {
-  if (!url?.startsWith("/uploads/activity/")) return;
-  try {
-    await fs.unlink(path.join(UPLOAD_DIR, path.basename(url)));
-  } catch {
-    // ignore
-  }
+  await deleteAsset(url);
 }
 
 export async function createActivity(
   input: ActivityInput,
   thumbnailFile?: File | null,
 ): Promise<ActivityItem> {
-  const items = await readActivityFile();
+  const storedRows = await readActivityRows();
   if (!input.title.trim()) throw new Error("Title is required");
   if (!input.date) throw new Error("Date is required");
 
   let thumbnail = input.thumbnailUrl || "";
   if (thumbnailFile && thumbnailFile.size > 0) {
-    thumbnail = await saveActivityThumbnail(thumbnailFile);
+    thumbnail = await uploadAsset(ACTIVITY_BUCKET, thumbnailFile, "activity");
   }
 
   const item: ActivityItem = {
@@ -106,8 +129,22 @@ export async function createActivity(
     link: input.link?.trim() || undefined,
   };
 
-  const base = items.length === 0 ? [...seedData.activity] : items;
-  await writeActivityFile(sortActivity([...base, item]));
+  if (storedRows.length === 0) {
+    await writeActivityFile(sortActivity([...seedData.activity, item]));
+  } else {
+    const client = getSupabaseAdminClient();
+    const payload = {
+      id: item._id,
+      type: item.type,
+      title: item.title,
+      date: item.date,
+      summary: item.summary,
+      thumbnail: item.thumbnail || null,
+      link: item.link || null,
+    };
+    const { error } = await client.from("activity").insert(payload);
+    if (error) throw new Error(`Could not create activity: ${error.message}`);
+  }
   return item;
 }
 
@@ -116,7 +153,8 @@ export async function updateActivity(
   input: ActivityInput,
   thumbnailFile?: File | null,
 ): Promise<ActivityItem> {
-  let items = await readActivityFile();
+  const storedRows = await readActivityRows();
+  let items = storedRows.map(mapActivity);
   if (items.length === 0) items = [...seedData.activity];
   const index = items.findIndex((a) => a._id === id);
   if (index < 0) throw new Error("Activity not found");
@@ -124,10 +162,14 @@ export async function updateActivity(
   const existing = items[index]!;
   let thumbnail = existing.thumbnail;
   if (thumbnailFile && thumbnailFile.size > 0) {
-    const next = await saveActivityThumbnail(thumbnailFile);
+    const next = await uploadAsset(ACTIVITY_BUCKET, thumbnailFile, "activity");
     await deleteThumbnail(existing.thumbnail);
     thumbnail = next;
-  } else if (input.thumbnailUrl !== undefined) {
+  } else if (
+    input.thumbnailUrl !== undefined &&
+    input.thumbnailUrl !== existing.thumbnail
+  ) {
+    await deleteThumbnail(existing.thumbnail);
     thumbnail = input.thumbnailUrl || undefined;
   }
 
@@ -144,15 +186,36 @@ export async function updateActivity(
   };
 
   items[index] = updated;
-  await writeActivityFile(sortActivity(items));
+  if (storedRows.length === 0) {
+    await writeActivityFile(sortActivity(items));
+  } else {
+    const client = getSupabaseAdminClient();
+    const payload = {
+      type: updated.type,
+      title: updated.title,
+      date: updated.date,
+      summary: updated.summary,
+      thumbnail: updated.thumbnail || null,
+      link: updated.link || null,
+    };
+    const { error } = await client.from("activity").update(payload).eq("id", id);
+    if (error) throw new Error(`Could not update activity: ${error.message}`);
+  }
   return updated;
 }
 
 export async function deleteActivity(id: string) {
-  let items = await readActivityFile();
+  const storedRows = await readActivityRows();
+  let items = storedRows.map(mapActivity);
   if (items.length === 0) items = [...seedData.activity];
   const existing = items.find((a) => a._id === id);
   if (!existing) throw new Error("Activity not found");
-  await writeActivityFile(items.filter((a) => a._id !== id));
+  if (storedRows.length === 0) {
+    await writeActivityFile(items.filter((a) => a._id !== id));
+  } else {
+    const client = getSupabaseAdminClient();
+    const { error } = await client.from("activity").delete().eq("id", id);
+    if (error) throw new Error(`Could not delete activity: ${error.message}`);
+  }
   await deleteThumbnail(existing.thumbnail);
 }

@@ -1,32 +1,90 @@
-import { promises as fs } from "fs";
-import path from "path";
+import "server-only";
+
 import { randomUUID } from "crypto";
 import { seedData } from "@/data/seed";
 import type { EmploymentType, Experience, WorkMode } from "@/lib/types";
+import { deleteAsset, EXPERIENCES_BUCKET, uploadAsset } from "@/lib/supabase/assets";
+import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase/client";
+import { hasSupabaseEnv } from "@/lib/supabase/config";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const FILE = path.join(DATA_DIR, "experiences.json");
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "experiences");
+type ExperienceRow = {
+  id: string;
+  company: string;
+  title: string;
+  location: string;
+  start_date: string;
+  end_date: string | null;
+  current: boolean;
+  employment_type: EmploymentType;
+  work_mode: WorkMode;
+  company_logo: string | null;
+  description: string;
+  highlights: string[] | null;
+  created_at: string;
+};
 
-async function ensureDirs() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+function isMissingRelationError(error: { code?: string } | null) {
+  return error?.code === "42P01";
+}
+
+function mapExperience(row: ExperienceRow): Experience {
+  return {
+    _id: row.id,
+    company: row.company,
+    title: row.title,
+    location: row.location,
+    startDate: row.start_date,
+    endDate: row.end_date || undefined,
+    current: row.current,
+    employmentType: row.employment_type,
+    workMode: row.work_mode,
+    companyLogo: row.company_logo || undefined,
+    description: row.description,
+    highlights: row.highlights || [],
+  };
+}
+
+async function readExperienceRows(): Promise<ExperienceRow[]> {
+  if (!hasSupabaseEnv()) return [];
+  const client = getSupabasePublicClient();
+  const { data, error } = await client
+    .from("experiences")
+    .select("*")
+    .order("current", { ascending: false })
+    .order("start_date", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (error) {
+    if (isMissingRelationError(error)) return [];
+    throw new Error(`Could not load experiences: ${error.message}`);
+  }
+  return (data || []) as ExperienceRow[];
 }
 
 export async function readExperiencesFile(): Promise<Experience[]> {
-  await ensureDirs();
-  try {
-    const raw = await fs.readFile(FILE, "utf8");
-    const parsed = JSON.parse(raw) as Experience[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  const rows = await readExperienceRows();
+  return rows.map(mapExperience);
 }
 
 export async function writeExperiencesFile(items: Experience[]) {
-  await ensureDirs();
-  await fs.writeFile(FILE, JSON.stringify(items, null, 2), "utf8");
+  const client = getSupabaseAdminClient();
+  const payload = items.map((item) => ({
+    id: item._id,
+    company: item.company,
+    title: item.title,
+    location: item.location,
+    start_date: item.startDate,
+    end_date: item.endDate || null,
+    current: item.current,
+    employment_type: item.employmentType,
+    work_mode: item.workMode,
+    company_logo: item.companyLogo || null,
+    description: item.description,
+    highlights: item.highlights || [],
+  }));
+  const { error } = await client
+    .from("experiences")
+    .upsert(payload, { onConflict: "id" });
+  if (error) throw new Error(`Could not write experiences: ${error.message}`);
 }
 
 export async function getStoredExperiences(): Promise<Experience[]> {
@@ -80,25 +138,8 @@ function asMode(v?: string): WorkMode {
   return MODES.includes(v as WorkMode) ? (v as WorkMode) : "On-site";
 }
 
-export async function saveLogoFile(file: File): Promise<string> {
-  await ensureDirs();
-  const ext = path.extname(file.name) || ".png";
-  const safeExt = ext.match(/^\.(jpe?g|png|webp|gif|avif|svg)$/i) ? ext : ".png";
-  const filename = `${Date.now()}-${randomUUID().slice(0, 8)}${safeExt.toLowerCase()}`;
-  await fs.writeFile(
-    path.join(UPLOAD_DIR, filename),
-    Buffer.from(await file.arrayBuffer()),
-  );
-  return `/uploads/experiences/${filename}`;
-}
-
 async function deleteLogo(url?: string) {
-  if (!url?.startsWith("/uploads/experiences/")) return;
-  try {
-    await fs.unlink(path.join(UPLOAD_DIR, path.basename(url)));
-  } catch {
-    // ignore
-  }
+  await deleteAsset(url);
 }
 
 function sortExperiences(items: Experience[]) {
@@ -113,7 +154,7 @@ export async function createExperience(
   input: ExperienceInput,
   logoFile?: File | null,
 ): Promise<Experience> {
-  const items = await readExperiencesFile();
+  const storedRows = await readExperienceRows();
   if (!input.title.trim() || !input.company.trim()) {
     throw new Error("Title and company are required");
   }
@@ -121,7 +162,7 @@ export async function createExperience(
 
   let companyLogo = input.companyLogoUrl || "";
   if (logoFile && logoFile.size > 0) {
-    companyLogo = await saveLogoFile(logoFile);
+    companyLogo = await uploadAsset(EXPERIENCES_BUCKET, logoFile, "experiences");
   }
 
   const exp: Experience = {
@@ -139,9 +180,28 @@ export async function createExperience(
     highlights: parseHighlights(input.highlights),
   };
 
-  const base = items.length === 0 ? [...seedData.experiences] : items;
-  const next = sortExperiences([...base, exp]);
-  await writeExperiencesFile(next);
+  if (storedRows.length === 0) {
+    const next = sortExperiences([...seedData.experiences, exp]);
+    await writeExperiencesFile(next);
+  } else {
+    const client = getSupabaseAdminClient();
+    const payload = {
+      id: exp._id,
+      company: exp.company,
+      title: exp.title,
+      location: exp.location,
+      start_date: exp.startDate,
+      end_date: exp.endDate || null,
+      current: exp.current,
+      employment_type: exp.employmentType,
+      work_mode: exp.workMode,
+      company_logo: exp.companyLogo || null,
+      description: exp.description,
+      highlights: exp.highlights,
+    };
+    const { error } = await client.from("experiences").insert(payload);
+    if (error) throw new Error(`Could not create experience: ${error.message}`);
+  }
   return exp;
 }
 
@@ -150,7 +210,8 @@ export async function updateExperience(
   input: ExperienceInput,
   logoFile?: File | null,
 ): Promise<Experience> {
-  let items = await readExperiencesFile();
+  const storedRows = await readExperienceRows();
+  let items = storedRows.map(mapExperience);
   if (items.length === 0) items = [...seedData.experiences];
   const index = items.findIndex((e) => e._id === id);
   if (index < 0) throw new Error("Experience not found");
@@ -158,10 +219,14 @@ export async function updateExperience(
   const existing = items[index]!;
   let companyLogo = existing.companyLogo;
   if (logoFile && logoFile.size > 0) {
-    const next = await saveLogoFile(logoFile);
+    const next = await uploadAsset(EXPERIENCES_BUCKET, logoFile, "experiences");
     await deleteLogo(existing.companyLogo);
     companyLogo = next;
-  } else if (input.companyLogoUrl !== undefined) {
+  } else if (
+    input.companyLogoUrl !== undefined &&
+    input.companyLogoUrl !== existing.companyLogo
+  ) {
+    await deleteLogo(existing.companyLogo);
     companyLogo = input.companyLogoUrl || undefined;
   }
 
@@ -198,15 +263,44 @@ export async function updateExperience(
   };
 
   items[index] = updated;
-  await writeExperiencesFile(sortExperiences(items));
+  if (storedRows.length === 0) {
+    await writeExperiencesFile(sortExperiences(items));
+  } else {
+    const client = getSupabaseAdminClient();
+    const payload = {
+      company: updated.company,
+      title: updated.title,
+      location: updated.location,
+      start_date: updated.startDate,
+      end_date: updated.endDate || null,
+      current: updated.current,
+      employment_type: updated.employmentType,
+      work_mode: updated.workMode,
+      company_logo: updated.companyLogo || null,
+      description: updated.description,
+      highlights: updated.highlights,
+    };
+    const { error } = await client
+      .from("experiences")
+      .update(payload)
+      .eq("id", id);
+    if (error) throw new Error(`Could not update experience: ${error.message}`);
+  }
   return updated;
 }
 
 export async function deleteExperience(id: string) {
-  let items = await readExperiencesFile();
+  const storedRows = await readExperienceRows();
+  let items = storedRows.map(mapExperience);
   if (items.length === 0) items = [...seedData.experiences];
   const existing = items.find((e) => e._id === id);
   if (!existing) throw new Error("Experience not found");
-  await writeExperiencesFile(items.filter((e) => e._id !== id));
+  if (storedRows.length === 0) {
+    await writeExperiencesFile(items.filter((e) => e._id !== id));
+  } else {
+    const client = getSupabaseAdminClient();
+    const { error } = await client.from("experiences").delete().eq("id", id);
+    if (error) throw new Error(`Could not delete experience: ${error.message}`);
+  }
   await deleteLogo(existing.companyLogo);
 }

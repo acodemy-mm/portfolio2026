@@ -148,10 +148,6 @@ export function ProjectForm({ mode, initial }: Props) {
     };
   }, [newGalleryPreviews]);
 
-  useEffect(() => {
-    if (!slugTouched) setSlug(slugify(title));
-  }, [title, slugTouched]);
-
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -208,7 +204,13 @@ export function ProjectForm({ mode, initial }: Props) {
           <input
             required
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              const nextTitle = e.target.value;
+              setTitle(nextTitle);
+              if (!slugTouched) {
+                setSlug(slugify(nextTitle));
+              }
+            }}
             className="w-full rounded-sm border border-white/15 bg-[var(--surface)] px-3 py-3 outline-none focus:border-[var(--accent)]"
           />
         </label>

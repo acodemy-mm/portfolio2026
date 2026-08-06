@@ -1,32 +1,100 @@
-import { promises as fs } from "fs";
-import path from "path";
+import "server-only";
+
 import { randomUUID } from "crypto";
 import type { Project } from "@/lib/types";
 import { seedData } from "@/data/seed";
+import { deleteAsset, PROJECTS_BUCKET, uploadAsset } from "@/lib/supabase/assets";
+import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase/client";
+import { hasSupabaseEnv } from "@/lib/supabase/config";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const PROJECTS_FILE = path.join(DATA_DIR, "projects.json");
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "projects");
+type ProjectRow = {
+  id: string;
+  title: string;
+  slug: string;
+  cover: string;
+  detail_cover: string | null;
+  gallery: string[] | null;
+  tags: string[] | null;
+  excerpt: string;
+  body: string;
+  featured: boolean;
+  year: string;
+  role: string;
+  client: string | null;
+  live_url: string | null;
+  created_at: string;
+};
 
-async function ensureDirs() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+function isMissingRelationError(error: { code?: string } | null) {
+  return error?.code === "42P01";
+}
+
+function mapProject(row: ProjectRow): Project {
+  return {
+    _id: row.id,
+    title: row.title,
+    slug: row.slug,
+    cover: row.cover,
+    detailCover: row.detail_cover || undefined,
+    gallery: row.gallery || [],
+    tags: row.tags || [],
+    excerpt: row.excerpt,
+    body: row.body,
+    featured: row.featured,
+    year: row.year,
+    role: row.role,
+    client: row.client || undefined,
+    liveUrl: row.live_url || undefined,
+  };
+}
+
+async function readProjectRows(): Promise<ProjectRow[]> {
+  if (!hasSupabaseEnv()) return [];
+  const client = getSupabasePublicClient();
+  const { data, error } = await client
+    .from("projects")
+    .select("*")
+    .order("featured", { ascending: false })
+    .order("year", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (error) {
+    if (isMissingRelationError(error)) return [];
+    throw new Error(`Could not load projects: ${error.message}`);
+  }
+  return (data || []) as ProjectRow[];
+}
+
+async function writeProjectRow(id: string, patch: Partial<ProjectRow>) {
+  const client = getSupabaseAdminClient();
+  const { error } = await client.from("projects").update(patch).eq("id", id);
+  if (error) throw new Error(`Could not update project: ${error.message}`);
 }
 
 export async function readProjectsFile(): Promise<Project[]> {
-  await ensureDirs();
-  try {
-    const raw = await fs.readFile(PROJECTS_FILE, "utf8");
-    const parsed = JSON.parse(raw) as Project[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  const rows = await readProjectRows();
+  return rows.map(mapProject);
 }
 
 export async function writeProjectsFile(projects: Project[]) {
-  await ensureDirs();
-  await fs.writeFile(PROJECTS_FILE, JSON.stringify(projects, null, 2), "utf8");
+  const client = getSupabaseAdminClient();
+  const payload = projects.map((project) => ({
+    id: project._id,
+    title: project.title,
+    slug: project.slug,
+    cover: project.cover,
+    detail_cover: project.detailCover || null,
+    gallery: project.gallery || [],
+    tags: project.tags || [],
+    excerpt: project.excerpt,
+    body: project.body,
+    featured: project.featured,
+    year: project.year,
+    role: project.role,
+    client: project.client || null,
+    live_url: project.liveUrl || null,
+  }));
+  const { error } = await client.from("projects").upsert(payload, { onConflict: "id" });
+  if (error) throw new Error(`Could not write projects: ${error.message}`);
 }
 
 export async function getStoredProjects(): Promise<Project[]> {
@@ -101,41 +169,21 @@ function parseGalleryUrls(raw?: string): string[] {
     .filter(Boolean);
 }
 
-export async function saveUploadFile(file: File): Promise<string> {
-  await ensureDirs();
-  const ext = path.extname(file.name) || ".jpg";
-  const safeExt = ext.match(/^\.(jpe?g|png|webp|gif|avif)$/i) ? ext : ".jpg";
-  const filename = `${Date.now()}-${randomUUID().slice(0, 8)}${safeExt.toLowerCase()}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
-  return `/uploads/projects/${filename}`;
-}
-
-export async function deleteUploadFile(url: string) {
-  if (!url.startsWith("/uploads/projects/")) return;
-  const filename = path.basename(url);
-  const full = path.join(UPLOAD_DIR, filename);
-  try {
-    await fs.unlink(full);
-  } catch {
-    // ignore missing file
-  }
-}
-
 async function deleteProjectUploads(project: Project) {
   const urls = [
     project.cover,
     project.detailCover,
     ...(project.gallery || []),
   ].filter(Boolean) as string[];
-  await Promise.all(urls.map((u) => deleteUploadFile(u)));
+  await Promise.all(urls.map((u) => deleteAsset(u)));
 }
 
 export async function createProject(
   input: ProjectInput,
   files: ProjectFiles = {},
 ): Promise<Project> {
-  const projects = await readProjectsFile();
+  const storedRows = await readProjectRows();
+  const projects = storedRows.map(mapProject);
   const slug = slugify(input.slug || input.title);
   if (!slug) throw new Error("Title or slug is required");
   if (projects.some((p) => p.slug === slug)) {
@@ -144,20 +192,22 @@ export async function createProject(
 
   let cover = input.coverUrl || "";
   if (files.poster && files.poster.size > 0) {
-    cover = await saveUploadFile(files.poster);
+    cover = await uploadAsset(PROJECTS_BUCKET, files.poster, "projects");
   }
   if (!cover) throw new Error("Movie poster cover is required");
 
   let detailCover = input.detailCoverUrl || "";
   if (files.detailCover && files.detailCover.size > 0) {
-    detailCover = await saveUploadFile(files.detailCover);
+    detailCover = await uploadAsset(PROJECTS_BUCKET, files.detailCover, "projects");
   }
   if (!detailCover) detailCover = cover;
 
   const gallery: string[] = [];
   if (files.gallery?.length) {
     for (const file of files.gallery) {
-      if (file.size > 0) gallery.push(await saveUploadFile(file));
+      if (file.size > 0) {
+        gallery.push(await uploadAsset(PROJECTS_BUCKET, file, "projects"));
+      }
     }
   }
 
@@ -178,11 +228,29 @@ export async function createProject(
     liveUrl: input.liveUrl?.trim() || undefined,
   };
 
-  const next =
-    projects.length === 0
-      ? [...seedData.projects, project]
-      : [...projects, project];
-  await writeProjectsFile(next);
+  if (storedRows.length === 0) {
+    await writeProjectsFile([...seedData.projects, project]);
+  } else {
+    const client = getSupabaseAdminClient();
+    const payload = {
+      id: project._id,
+      title: project.title,
+      slug: project.slug,
+      cover: project.cover,
+      detail_cover: project.detailCover || null,
+      gallery: project.gallery || [],
+      tags: project.tags,
+      excerpt: project.excerpt,
+      body: project.body,
+      featured: project.featured,
+      year: project.year,
+      role: project.role,
+      client: project.client || null,
+      live_url: project.liveUrl || null,
+    };
+    const { error } = await client.from("projects").insert(payload);
+    if (error) throw new Error(`Could not create project: ${error.message}`);
+  }
   return project;
 }
 
@@ -191,41 +259,42 @@ export async function updateProject(
   input: ProjectInput,
   files: ProjectFiles = {},
 ): Promise<Project> {
-  let projects = await readProjectsFile();
-  if (projects.length === 0) {
-    projects = [...seedData.projects];
-  }
-  const index = projects.findIndex((p) => p._id === id);
-  if (index < 0) throw new Error("Project not found");
+  const storedRows = await readProjectRows();
+  let projects = storedRows.map(mapProject);
+  if (projects.length === 0) projects = [...seedData.projects];
+  const existing = projects.find((p) => p._id === id);
+  if (!existing) throw new Error("Project not found");
 
-  const existing = projects[index]!;
   const slug = slugify(input.slug || input.title || existing.slug);
-  if (projects.some((p, i) => i !== index && p.slug === slug)) {
+  if (projects.some((p) => p._id !== id && p.slug === slug)) {
     throw new Error("A project with this slug already exists");
   }
 
   let cover = existing.cover;
   if (files.poster && files.poster.size > 0) {
-    const nextCover = await saveUploadFile(files.poster);
-    if (existing.cover.startsWith("/uploads/projects/")) {
-      await deleteUploadFile(existing.cover);
-    }
+    const nextCover = await uploadAsset(PROJECTS_BUCKET, files.poster, "projects");
+    await deleteAsset(existing.cover);
     cover = nextCover;
-  } else if (input.coverUrl) {
+  } else if (input.coverUrl && input.coverUrl !== existing.cover) {
+    await deleteAsset(existing.cover);
     cover = input.coverUrl;
   }
 
   let detailCover = existing.detailCover || existing.cover;
   if (files.detailCover && files.detailCover.size > 0) {
-    const nextDetail = await saveUploadFile(files.detailCover);
-    if (
-      existing.detailCover?.startsWith("/uploads/projects/") &&
-      existing.detailCover !== existing.cover
-    ) {
-      await deleteUploadFile(existing.detailCover);
+    const nextDetail = await uploadAsset(
+      PROJECTS_BUCKET,
+      files.detailCover,
+      "projects",
+    );
+    if (existing.detailCover && existing.detailCover !== existing.cover) {
+      await deleteAsset(existing.detailCover);
     }
     detailCover = nextDetail;
-  } else if (input.detailCoverUrl) {
+  } else if (input.detailCoverUrl && input.detailCoverUrl !== detailCover) {
+    if (existing.detailCover && existing.detailCover !== existing.cover) {
+      await deleteAsset(existing.detailCover);
+    }
     detailCover = input.detailCoverUrl;
   }
 
@@ -235,16 +304,15 @@ export async function updateProject(
   }
   if (files.gallery?.length) {
     for (const file of files.gallery) {
-      if (file.size > 0) gallery.push(await saveUploadFile(file));
+      if (file.size > 0) {
+        gallery.push(await uploadAsset(PROJECTS_BUCKET, file, "projects"));
+      }
     }
   }
 
-  // Delete gallery images removed from the kept list
   const previousGallery = existing.gallery || [];
   for (const url of previousGallery) {
-    if (!gallery.includes(url) && url.startsWith("/uploads/projects/")) {
-      await deleteUploadFile(url);
-    }
+    if (!gallery.includes(url)) await deleteAsset(url);
   }
 
   const updated: Project = {
@@ -273,20 +341,40 @@ export async function updateProject(
         ? input.liveUrl.trim() || undefined
         : existing.liveUrl,
   };
-
-  projects[index] = updated;
-  await writeProjectsFile(projects);
+  if (storedRows.length === 0) {
+    await writeProjectsFile(projects.map((project) => (project._id === id ? updated : project)));
+  } else {
+    await writeProjectRow(id, {
+      title: updated.title,
+      slug: updated.slug,
+      cover: updated.cover,
+      detail_cover: updated.detailCover || null,
+      gallery: updated.gallery || [],
+      tags: updated.tags,
+      excerpt: updated.excerpt,
+      body: updated.body,
+      featured: updated.featured,
+      year: updated.year,
+      role: updated.role,
+      client: updated.client || null,
+      live_url: updated.liveUrl || null,
+    });
+  }
   return updated;
 }
 
 export async function deleteProject(id: string) {
-  let projects = await readProjectsFile();
-  if (projects.length === 0) {
-    projects = [...seedData.projects];
-  }
+  const storedRows = await readProjectRows();
+  let projects = storedRows.map(mapProject);
+  if (projects.length === 0) projects = [...seedData.projects];
   const existing = projects.find((p) => p._id === id);
   if (!existing) throw new Error("Project not found");
-  const next = projects.filter((p) => p._id !== id);
-  await writeProjectsFile(next);
+  if (storedRows.length === 0) {
+    await writeProjectsFile(projects.filter((p) => p._id !== id));
+  } else {
+    const client = getSupabaseAdminClient();
+    const { error } = await client.from("projects").delete().eq("id", id);
+    if (error) throw new Error(`Could not delete project: ${error.message}`);
+  }
   await deleteProjectUploads(existing);
 }
