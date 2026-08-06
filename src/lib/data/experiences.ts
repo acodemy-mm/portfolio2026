@@ -6,6 +6,7 @@ import type { EmploymentType, Experience, WorkMode } from "@/lib/types";
 import { deleteAsset, EXPERIENCES_BUCKET, uploadAsset } from "@/lib/supabase/assets";
 import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase/client";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
+import { ensureUuid, isUuid } from "@/lib/supabase/ids";
 
 type ExperienceRow = {
   id: string;
@@ -67,8 +68,9 @@ export async function readExperiencesFile(): Promise<Experience[]> {
 
 export async function writeExperiencesFile(items: Experience[]) {
   const client = getSupabaseAdminClient();
+  const originalIds = items.map((item) => item._id);
   const payload = items.map((item) => ({
-    id: item._id,
+    id: ensureUuid(item._id),
     company: item.company,
     title: item.title,
     location: item.location,
@@ -81,6 +83,9 @@ export async function writeExperiencesFile(items: Experience[]) {
     description: item.description,
     highlights: item.highlights || [],
   }));
+  // #region agent log
+  fetch('http://127.0.0.1:7684/ingest/883ea70a-a31d-4ff8-9e1b-48ba240c0918',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'76cce1'},body:JSON.stringify({sessionId:'76cce1',runId:'post-fix',hypothesisId:'H1',location:'src/lib/data/experiences.ts:writeExperiencesFile',message:'Writing experience payload batch',data:{count:payload.length,originalInvalidIds:originalIds.filter((id)=>!isUuid(id)),payloadInvalidIds:payload.filter((item)=>!isUuid(item.id)).map((item)=>item.id)},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   const { error } = await client
     .from("experiences")
     .upsert(payload, { onConflict: "id" });

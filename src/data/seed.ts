@@ -39,7 +39,7 @@ export const seedData: PortfolioData = {
   },
   projects: [
     {
-      _id: "p1",
+      _id: "a1111111-1111-4111-8111-111111111101",
       title: "Sedona Loyalty Mobile App",
       slug: "sedona-loyalty-mobile-app",
       cover: covers.aurora,
@@ -54,7 +54,7 @@ export const seedData: PortfolioData = {
       liveUrl: "https://apps.apple.com/mm/app/sedona-yangon-loyalty-program/id6502490113",
     },
     {
-      _id: "p2",
+      _id: "a1111111-1111-4111-8111-111111111102",
       title: "Pulse Analytics",
       slug: "pulse-analytics",
       cover: covers.neon,
@@ -68,7 +68,7 @@ export const seedData: PortfolioData = {
       client: "Northstar Labs",
     },
     {
-      _id: "p3",
+      _id: "a1111111-1111-4111-8111-111111111103",
       title: "Atelier Commerce",
       slug: "atelier-commerce",
       cover: covers.studio,
@@ -82,7 +82,7 @@ export const seedData: PortfolioData = {
       client: "Atelier Co.",
     },
     {
-      _id: "p4",
+      _id: "a1111111-1111-4111-8111-111111111104",
       title: "Vault Banking",
       slug: "vault-banking",
       cover: covers.city,
@@ -96,7 +96,7 @@ export const seedData: PortfolioData = {
       client: "Vault",
     },
     {
-      _id: "p5",
+      _id: "a1111111-1111-4111-8111-111111111105",
       title: "Orbit Docs",
       slug: "orbit-docs",
       cover: covers.product,
@@ -128,7 +128,7 @@ export const seedData: PortfolioData = {
   ],
   experiences: [
     {
-      _id: "e1",
+      _id: "b2222222-2222-4222-8222-222222222201",
       company: "KBZ Bank",
       title: "User Experience Lead",
       location: "Yangon, Myanmar",
@@ -145,7 +145,7 @@ export const seedData: PortfolioData = {
       ],
     },
     {
-      _id: "e2",
+      _id: "b2222222-2222-4222-8222-222222222202",
       company: "UXMM",
       title: "Member",
       location: "Yangon, Myanmar",
@@ -159,7 +159,7 @@ export const seedData: PortfolioData = {
       highlights: [],
     },
     {
-      _id: "e3",
+      _id: "b2222222-2222-4222-8222-222222222203",
       company: "BIM Group of Companies",
       title: "UX/UI Designer",
       location: "Yangon, Myanmar",
@@ -174,7 +174,7 @@ export const seedData: PortfolioData = {
       highlights: [],
     },
     {
-      _id: "e4",
+      _id: "b2222222-2222-4222-8222-222222222204",
       company: "MM PROJECT",
       title: "UX Design Instructor",
       location: "Yangon, Myanmar",
@@ -188,7 +188,7 @@ export const seedData: PortfolioData = {
       highlights: [],
     },
     {
-      _id: "e5",
+      _id: "b2222222-2222-4222-8222-222222222205",
       company: "Acodemy",
       title: "UX Design Instructor",
       location: "Yangon, Myanmar",
@@ -254,7 +254,7 @@ export const seedData: PortfolioData = {
   ],
   activity: [
     {
-      _id: "a1",
+      _id: "c3333333-3333-4333-8333-333333333301",
       type: "ship",
       title: "Launched Streamline OS v2",
       date: "2025-11-12",
@@ -263,7 +263,7 @@ export const seedData: PortfolioData = {
       link: "/work/streamline-os",
     },
     {
-      _id: "a2",
+      _id: "c3333333-3333-4333-8333-333333333302",
       type: "write",
       title: "Published: Motion that earns its keep",
       date: "2025-10-02",
@@ -272,7 +272,7 @@ export const seedData: PortfolioData = {
       link: "/articles/motion-that-earns-its-keep",
     },
     {
-      _id: "a3",
+      _id: "c3333333-3333-4333-8333-333333333303",
       type: "speak",
       title: "Spoke at DesignOps Summit",
       date: "2025-06-18",
@@ -280,7 +280,7 @@ export const seedData: PortfolioData = {
       thumbnail: covers.neon,
     },
     {
-      _id: "a4",
+      _id: "c3333333-3333-4333-8333-333333333304",
       type: "award",
       title: "Awwwards Honorable Mention",
       date: "2024-09-04",
@@ -289,7 +289,7 @@ export const seedData: PortfolioData = {
       link: "/work/atelier-commerce",
     },
     {
-      _id: "a5",
+      _id: "c3333333-3333-4333-8333-333333333305",
       type: "milestone",
       title: "Joined Horizon Media as Lead",
       date: "2023-01-09",
