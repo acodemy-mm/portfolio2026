@@ -75,7 +75,7 @@ export function Nav({ brand }: { brand: string }) {
 
         <Link
           href="/resume"
-          className="hidden rounded-sm bg-[var(--accent)] px-3 py-1.5 text-sm font-semibold text-white transition-transform hover:bg-[var(--accent-hover)] active:scale-[0.97] md:inline-block"
+          className="hidden rounded-sm bg-[var(--accent)] px-3 py-1.5 text-sm font-semibold text-white transition-transform hover:bg-[var(--accent-hover)] active:scale-[0.97] lg:inline-block"
         >
           Resume
         </Link>
