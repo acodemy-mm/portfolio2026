@@ -6,6 +6,7 @@ import type { EmploymentType, Experience, WorkMode } from "@/lib/types";
 import { deleteAsset, EXPERIENCES_BUCKET, uploadAsset } from "@/lib/supabase/assets";
 import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase/client";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
+import { isMissingRelationError } from "@/lib/supabase/errors";
 import { ensureUuid } from "@/lib/supabase/ids";
 
 type ExperienceRow = {
@@ -23,10 +24,6 @@ type ExperienceRow = {
   highlights: string[] | null;
   created_at: string;
 };
-
-function isMissingRelationError(error: { code?: string } | null) {
-  return error?.code === "42P01";
-}
 
 function mapExperience(row: ExperienceRow): Experience {
   return {

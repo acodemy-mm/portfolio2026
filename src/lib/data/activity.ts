@@ -6,6 +6,7 @@ import type { ActivityItem } from "@/lib/types";
 import { ACTIVITY_BUCKET, deleteAsset, uploadAsset } from "@/lib/supabase/assets";
 import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase/client";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
+import { isMissingRelationError } from "@/lib/supabase/errors";
 import { ensureUuid } from "@/lib/supabase/ids";
 
 const TYPES: ActivityItem["type"][] = [
@@ -26,10 +27,6 @@ type ActivityRow = {
   link: string | null;
   created_at: string;
 };
-
-function isMissingRelationError(error: { code?: string } | null) {
-  return error?.code === "42P01";
-}
 
 function mapActivity(row: ActivityRow): ActivityItem {
   return {

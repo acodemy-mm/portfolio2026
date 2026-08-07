@@ -6,6 +6,7 @@ import { seedData } from "@/data/seed";
 import { deleteAsset, PROJECTS_BUCKET, uploadAsset } from "@/lib/supabase/assets";
 import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase/client";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
+import { isMissingRelationError } from "@/lib/supabase/errors";
 import { ensureUuid } from "@/lib/supabase/ids";
 
 type ProjectRow = {
@@ -25,10 +26,6 @@ type ProjectRow = {
   live_url: string | null;
   created_at: string;
 };
-
-function isMissingRelationError(error: { code?: string } | null) {
-  return error?.code === "42P01";
-}
 
 function mapProject(row: ProjectRow): Project {
   return {

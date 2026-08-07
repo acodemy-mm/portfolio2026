@@ -6,6 +6,7 @@ import type { Article } from "@/lib/types";
 import { ARTICLES_BUCKET, deleteAsset, uploadAsset } from "@/lib/supabase/assets";
 import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase/client";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
+import { isMissingRelationError } from "@/lib/supabase/errors";
 import { ensureUuid } from "@/lib/supabase/ids";
 
 type ArticleRow = {
@@ -19,10 +20,6 @@ type ArticleRow = {
   published_at: string;
   created_at: string;
 };
-
-function isMissingRelationError(error: { code?: string } | null) {
-  return error?.code === "42P01";
-}
 
 function mapArticle(row: ArticleRow): Article {
   return {
