@@ -299,7 +299,7 @@ export const seedData: PortfolioData = {
   ],
   articles: [
     {
-      _id: "ar1",
+      _id: "d4444444-4444-4444-8444-444444444401",
       title: "Motion that earns its keep",
       slug: "motion-that-earns-its-keep",
       cover: covers.article1,
@@ -310,7 +310,7 @@ export const seedData: PortfolioData = {
       publishedAt: "2025-10-02",
     },
     {
-      _id: "ar2",
+      _id: "d4444444-4444-4444-8444-444444444402",
       title: "ATS resumes without looking like paperwork",
       slug: "ats-resumes-without-paperwork",
       cover: covers.article2,
@@ -321,7 +321,7 @@ export const seedData: PortfolioData = {
       publishedAt: "2025-07-21",
     },
     {
-      _id: "ar3",
+      _id: "d4444444-4444-4444-8444-444444444403",
       title: "Design systems that ship in the same PR",
       slug: "design-systems-that-ship",
       cover: covers.article3,

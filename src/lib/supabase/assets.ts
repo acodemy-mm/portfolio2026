@@ -8,11 +8,13 @@ import { getSupabaseUrl } from "@/lib/supabase/config";
 export const PROJECTS_BUCKET = "projects";
 export const EXPERIENCES_BUCKET = "experiences";
 export const ACTIVITY_BUCKET = "activity";
+export const ARTICLES_BUCKET = "articles";
 
 type SupportedBucket =
   | typeof PROJECTS_BUCKET
   | typeof EXPERIENCES_BUCKET
-  | typeof ACTIVITY_BUCKET;
+  | typeof ACTIVITY_BUCKET
+  | typeof ARTICLES_BUCKET;
 
 function getPublicPrefix() {
   return `${getSupabaseUrl()}/storage/v1/object/public/`;

@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 export function revalidatePortfolioContent(slug?: string) {
   revalidatePath("/", "layout");
   revalidatePath("/work");
-  if (slug) revalidatePath(`/work/${slug}`);
+  if (slug) {
+    revalidatePath(`/work/${slug}`);
+    revalidatePath(`/articles/${slug}`);
+  }
   revalidatePath("/activity");
   revalidatePath("/skills");
   revalidatePath("/about");

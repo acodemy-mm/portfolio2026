@@ -8,6 +8,7 @@ const nav = [
   { href: "/admin/projects", label: "Projects" },
   { href: "/admin/experiences", label: "Experiences" },
   { href: "/admin/activity", label: "Activity" },
+  { href: "/admin/articles", label: "Articles" },
 ];
 
 export function AdminShell({

@@ -1,5 +1,9 @@
 import { seedData } from "@/data/seed";
 import { getStoredActivity } from "@/lib/data/activity";
+import {
+  getStoredArticleBySlug,
+  getStoredArticles,
+} from "@/lib/data/articles";
 import { getStoredExperiences } from "@/lib/data/experiences";
 import {
   getStoredProjectBySlug,
@@ -8,16 +12,18 @@ import {
 import type { Article, PortfolioData, Project } from "@/lib/types";
 
 export async function getPortfolioData(): Promise<PortfolioData> {
-  const [projects, experiences, activity] = await Promise.all([
+  const [projects, experiences, activity, articles] = await Promise.all([
     getStoredProjects(),
     getStoredExperiences(),
     getStoredActivity(),
+    getStoredArticles(),
   ]);
   return {
     ...seedData,
     projects,
     experiences,
     activity,
+    articles,
   };
 }
 
@@ -30,6 +36,5 @@ export async function getProjectBySlug(
 export async function getArticleBySlug(
   slug: string,
 ): Promise<Article | undefined> {
-  const data = await getPortfolioData();
-  return data.articles.find((a) => a.slug === slug);
+  return getStoredArticleBySlug(slug);
 }

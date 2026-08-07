@@ -20,19 +20,21 @@ export default async function HomePage() {
       />
 
       <div className="relative z-20 -mt-8 space-y-1 md:-mt-24 lg:-mt-28">
-        <MotionRow title="Trending Now" href="/work">
-          {data.projects.map((p) => (
-            <HoverCard
-              key={p._id}
-              href={`/work/${p.slug}`}
-              title={p.title}
-              subtitle={p.tags.join(" · ")}
-              image={p.cover}
-              layoutId={`project-cover-${p.slug}`}
-              variant="poster"
-              brandMark={brandMark}
-            />
-          ))}
+        <MotionRow title="Highlight Projects" href="/work">
+          {data.projects
+            .filter((p) => p.featured)
+            .map((p) => (
+              <HoverCard
+                key={p._id}
+                href={`/work/${p.slug}`}
+                title={p.title}
+                subtitle={p.tags.join(" · ")}
+                image={p.cover}
+                layoutId={`project-cover-${p.slug}`}
+                variant="poster"
+                brandMark={brandMark}
+              />
+            ))}
         </MotionRow>
 
         <MotionRow title="My Work" href="/work">

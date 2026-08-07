@@ -20,10 +20,12 @@ Until you save content in admin, the site uses seed content. In production, cont
 2. Configure Supabase env vars
 3. Apply the SQL in `supabase/schema.sql`
 4. Visit `/admin` and sign in
-5. Manage **Projects**, **Work Experiences**, and **Activity**
+5. Manage **Projects**, **Work Experiences**, **Activity**, and **Articles**
 6. Optional one-time bootstrap: send a `POST` request to `/api/admin/bootstrap` after signing in to copy current local JSON/seed content into Supabase
 
-Until your Supabase tables contain rows, the site uses seed content. Local data files are still supported as a bootstrap source during migration: `data/projects.json`, `data/experiences.json`, `data/activity.json`.
+Until your Supabase tables contain rows, the site uses seed content. Local data files are still supported as a bootstrap source during migration: `data/projects.json`, `data/experiences.json`, `data/activity.json`, `data/articles.json`.
+
+If you already ran an older `schema.sql`, also run `supabase/articles.sql` to add the articles table and storage bucket.
 
 ## Routes
 

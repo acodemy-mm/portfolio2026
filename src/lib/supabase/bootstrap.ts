@@ -4,11 +4,13 @@ import { promises as fs } from "fs";
 import path from "path";
 import { seedData } from "@/data/seed";
 import { writeActivityFile } from "@/lib/data/activity";
+import { writeArticlesFile } from "@/lib/data/articles";
 import { writeExperiencesFile } from "@/lib/data/experiences";
 import { writeProjectsFile } from "@/lib/data/projects";
-import type { ActivityItem, Experience, Project } from "@/lib/types";
+import type { ActivityItem, Article, Experience, Project } from "@/lib/types";
 import {
   ACTIVITY_BUCKET,
+  ARTICLES_BUCKET,
   EXPERIENCES_BUCKET,
   PROJECTS_BUCKET,
   parseSupabaseAssetUrl,
@@ -55,9 +57,15 @@ function mimeFromPath(filePath: string) {
   }
 }
 
+type AssetBucket =
+  | typeof PROJECTS_BUCKET
+  | typeof EXPERIENCES_BUCKET
+  | typeof ACTIVITY_BUCKET
+  | typeof ARTICLES_BUCKET;
+
 async function migrateLocalAsset(
   value: string | undefined,
-  bucket: typeof PROJECTS_BUCKET | typeof EXPERIENCES_BUCKET | typeof ACTIVITY_BUCKET,
+  bucket: AssetBucket,
   folder: string,
 ) {
   if (!value || value.startsWith("http")) return value;
@@ -93,7 +101,16 @@ async function loadActivitySource() {
   return Array.isArray(local) && local.length > 0 ? local : seedData.activity;
 }
 
-async function countRows(table: "projects" | "experiences" | "activity") {
+async function loadArticlesSource() {
+  const local = await readJsonIfExists<Article[]>(
+    path.join(process.cwd(), "data", "articles.json"),
+  );
+  return Array.isArray(local) && local.length > 0 ? local : seedData.articles;
+}
+
+async function countRows(
+  table: "projects" | "experiences" | "activity" | "articles",
+) {
   const client = getSupabaseAdminClient();
   const { count, error } = await client
     .from(table)
@@ -103,28 +120,39 @@ async function countRows(table: "projects" | "experiences" | "activity") {
 }
 
 export async function bootstrapSupabaseContent(force = false) {
-  const [projectCount, experienceCount, activityCount] = await Promise.all([
-    countRows("projects"),
-    countRows("experiences"),
-    countRows("activity"),
-  ]);
+  const [projectCount, experienceCount, activityCount, articleCount] =
+    await Promise.all([
+      countRows("projects"),
+      countRows("experiences"),
+      countRows("activity"),
+      countRows("articles"),
+    ]);
 
-  if (!force && (projectCount > 0 || experienceCount > 0 || activityCount > 0)) {
+  if (
+    !force &&
+    (projectCount > 0 ||
+      experienceCount > 0 ||
+      activityCount > 0 ||
+      articleCount > 0)
+  ) {
     return {
       skipped: true,
       counts: {
         projects: projectCount,
         experiences: experienceCount,
         activity: activityCount,
+        articles: articleCount,
       },
     };
   }
 
-  const [projectsSource, experiencesSource, activitySource] = await Promise.all([
-    loadProjectsSource(),
-    loadExperiencesSource(),
-    loadActivitySource(),
-  ]);
+  const [projectsSource, experiencesSource, activitySource, articlesSource] =
+    await Promise.all([
+      loadProjectsSource(),
+      loadExperiencesSource(),
+      loadActivitySource(),
+      loadArticlesSource(),
+    ]);
 
   const projects = await Promise.all(
     projectsSource.map(async (project) => ({
@@ -168,10 +196,20 @@ export async function bootstrapSupabaseContent(force = false) {
     })),
   );
 
+  const articles = await Promise.all(
+    articlesSource.map(async (article) => ({
+      ...article,
+      cover:
+        (await migrateLocalAsset(article.cover, ARTICLES_BUCKET, "articles")) ||
+        article.cover,
+    })),
+  );
+
   await Promise.all([
     writeProjectsFile(projects),
     writeExperiencesFile(experiences),
     writeActivityFile(activity),
+    writeArticlesFile(articles),
   ]);
 
   return {
@@ -180,6 +218,7 @@ export async function bootstrapSupabaseContent(force = false) {
       projects: projects.length,
       experiences: experiences.length,
       activity: activity.length,
+      articles: articles.length,
     },
   };
 }
