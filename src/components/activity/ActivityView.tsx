@@ -30,9 +30,12 @@ export function ActivityView({ items }: { items: ActivityItem[] }) {
       </ScrollReveal>
 
       <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => {
-          const card = (
-            <>
+        {items.map((item) => (
+          <StaggerItem key={item._id}>
+            <Link
+              href={`/activity/${item._id}`}
+              className="block overflow-hidden rounded-sm border border-white/10 bg-[var(--surface)] transition hover:border-white/25"
+            >
               <div className="relative aspect-video w-full overflow-hidden bg-black/40">
                 {item.thumbnail ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -68,26 +71,9 @@ export function ActivityView({ items }: { items: ActivityItem[] }) {
                   {formatActivityTime(item.date)}
                 </time>
               </div>
-            </>
-          );
-
-          return (
-            <StaggerItem key={item._id}>
-              {item.link ? (
-                <Link
-                  href={item.link}
-                  className="block overflow-hidden rounded-sm border border-white/10 bg-[var(--surface)] transition hover:border-white/25"
-                >
-                  {card}
-                </Link>
-              ) : (
-                <div className="overflow-hidden rounded-sm border border-white/10 bg-[var(--surface)]">
-                  {card}
-                </div>
-              )}
-            </StaggerItem>
-          );
-        })}
+            </Link>
+          </StaggerItem>
+        ))}
       </Stagger>
     </div>
   );

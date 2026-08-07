@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     const thumbnailFile =
       thumb instanceof File && thumb.size > 0 ? thumb : null;
     const activity = await createActivity(inputFromForm(form), thumbnailFile);
-    revalidatePortfolioContent();
+    revalidatePortfolioContent({ activityId: activity._id });
     return NextResponse.json({ ok: true, activity });
   } catch (err) {
     return NextResponse.json(

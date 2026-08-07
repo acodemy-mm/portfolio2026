@@ -139,14 +139,17 @@ export function ActivityForm({ mode, initial }: Props) {
         </label>
         <label className="block md:col-span-2">
           <span className="mb-1.5 block text-xs uppercase tracking-wider text-[var(--text-dim)]">
-            Link (optional)
+            Related link (optional)
           </span>
           <input
             className={field}
             value={link}
             onChange={(e) => setLink(e.target.value)}
-            placeholder="/work/slug or https://..."
+            placeholder="/work/slug, /articles/slug, or https://..."
           />
+          <span className="mt-1.5 block text-xs text-[var(--text-muted)]">
+            Cards open the activity detail page. This link is shown as a button there.
+          </span>
         </label>
       </div>
       {error ? <p className="text-sm text-red-400">{error}</p> : null}

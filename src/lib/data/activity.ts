@@ -81,6 +81,13 @@ export async function getStoredActivity(): Promise<ActivityItem[]> {
   return seedData.activity;
 }
 
+export async function getStoredActivityById(
+  id: string,
+): Promise<ActivityItem | undefined> {
+  const items = await getStoredActivity();
+  return items.find((item) => item._id === id);
+}
+
 export type ActivityInput = {
   type?: string;
   title: string;

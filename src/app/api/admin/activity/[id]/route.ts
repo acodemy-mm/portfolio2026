@@ -31,7 +31,7 @@ export async function PUT(request: Request, ctx: Ctx) {
     const thumbnailFile =
       thumb instanceof File && thumb.size > 0 ? thumb : null;
     const activity = await updateActivity(id, inputFromForm(form), thumbnailFile);
-    revalidatePortfolioContent();
+    revalidatePortfolioContent({ activityId: activity._id });
     return NextResponse.json({ ok: true, activity });
   } catch (err) {
     return NextResponse.json(
@@ -48,7 +48,7 @@ export async function DELETE(_request: Request, ctx: Ctx) {
   const { id } = await ctx.params;
   try {
     await deleteActivity(id);
-    revalidatePortfolioContent();
+    revalidatePortfolioContent({ activityId: id });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json(

@@ -17,8 +17,11 @@ function formatActivityTime(date: string) {
 }
 
 export function ActivityCard({ item }: { item: ActivityItem }) {
-  const content = (
-    <>
+  return (
+    <Link
+      href={`/activity/${item._id}`}
+      className="group flex w-[70vw] max-w-[280px] shrink-0 flex-col overflow-hidden rounded-[2px] border border-white/10 bg-[var(--surface)] transition hover:border-white/25 hover:bg-[var(--surface-hover)] sm:w-[45vw] md:w-[22vw] md:max-w-[260px]"
+    >
       <div className="relative aspect-video w-full overflow-hidden bg-black/40">
         {item.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -54,19 +57,6 @@ export function ActivityCard({ item }: { item: ActivityItem }) {
           {formatActivityTime(item.date)}
         </time>
       </div>
-    </>
+    </Link>
   );
-
-  const className =
-    "group flex w-[70vw] max-w-[280px] shrink-0 flex-col overflow-hidden rounded-[2px] border border-white/10 bg-[var(--surface)] transition hover:border-white/25 hover:bg-[var(--surface-hover)] sm:w-[45vw] md:w-[22vw] md:max-w-[260px]";
-
-  if (item.link) {
-    return (
-      <Link href={item.link} className={className}>
-        {content}
-      </Link>
-    );
-  }
-
-  return <div className={className}>{content}</div>;
 }
