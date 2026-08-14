@@ -77,20 +77,22 @@ export function ContactForm({
             <p className="font-[family-name:var(--font-bebas)] text-2xl tracking-wide text-white">
               Elsewhere
             </p>
-            <ul className="mt-4 space-y-3">
-              {settings.socials.map((s) => (
-                <li key={s.label}>
-                  <a
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[var(--text-muted)] transition hover:text-white"
-                  >
-                    {s.label} →
-                  </a>
-                </li>
-              ))}
-            </ul>
+            {settings.socials.length > 0 ? (
+              <ul className="mt-4 space-y-3">
+                {settings.socials.map((s) => (
+                  <li key={s.label}>
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--text-muted)] transition hover:text-white"
+                    >
+                      {s.label} →
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <a
               href={`mailto:${settings.email}`}
               className="mt-6 inline-block text-sm text-[var(--accent)] hover:underline"

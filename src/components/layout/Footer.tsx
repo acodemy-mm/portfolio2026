@@ -20,7 +20,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-8 text-sm">
+          <div className="flex flex-wrap gap-8 text-sm">
           <div className="flex flex-col gap-2">
             <p className="font-semibold text-white">Explore</p>
             <Link href="/work" className="text-[var(--text-muted)] hover:text-white">
@@ -36,20 +36,22 @@ export function Footer({ settings }: { settings: SiteSettings }) {
               About & Contact
             </Link>
           </div>
-          <div className="flex flex-col gap-2">
-            <p className="font-semibold text-white">Connect</p>
-            {settings.socials.map((s) => (
-              <a
-                key={s.label}
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[var(--text-muted)] hover:text-white"
-              >
-                {s.label}
-              </a>
-            ))}
-          </div>
+          {settings.socials.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold text-white">Connect</p>
+              {settings.socials.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--text-muted)] hover:text-white"
+                >
+                  {s.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
       <div className="border-t border-white/5 px-4 py-4 text-center text-xs text-[var(--text-dim)]">

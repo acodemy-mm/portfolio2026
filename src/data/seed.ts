@@ -24,12 +24,7 @@ export const seedData: PortfolioData = {
     tagline: "Listening to users, building for future.",
     email: "lynnhtetthant@gmail.com",
     location: "Remote · Worldwide",
-    socials: [
-      { label: "GitHub", url: "https://github.com" },
-      { label: "LinkedIn", url: "https://linkedin.com" },
-      { label: "Dribbble", url: "https://dribbble.com" },
-      { label: "X", url: "https://x.com" },
-    ],
+    socials: [],
     resumePdfUrl: "/api/resume",
     experiencePoster: "/experience-poster.png",
     summary:
