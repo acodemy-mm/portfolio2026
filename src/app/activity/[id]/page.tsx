@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ActivityDetail } from "@/components/activity/ActivityDetail";
 import { getActivityById, getPortfolioData } from "@/lib/data/portfolio";
+import { htmlToPlainText } from "@/lib/html";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const item = await getActivityById(id);
   if (!item) return { title: "Activity" };
-  return { title: item.title, description: item.summary };
+  return { title: item.title, description: htmlToPlainText(item.summary) };
 }
 
 export default async function ActivityDetailPage({ params }: Props) {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/SectionHeading";
 import { ScrollReveal } from "@/components/motion/primitives";
+import { richTextToHtml } from "@/lib/html";
 import type { ActivityItem } from "@/lib/types";
 
 function formatActivityTime(date: string) {
@@ -24,6 +25,8 @@ function isExternalLink(href: string) {
 }
 
 export function ActivityDetail({ item }: { item: ActivityItem }) {
+  const bodyHtml = richTextToHtml(item.summary || "");
+
   return (
     <article>
       <section className="relative min-h-[45vh] overflow-hidden pt-[var(--nav-height)] md:min-h-[55vh]">
@@ -61,10 +64,11 @@ export function ActivityDetail({ item }: { item: ActivityItem }) {
 
       <div className="mx-auto max-w-3xl px-4 py-14 md:px-8">
         <ScrollReveal>
-          {item.summary ? (
-            <p className="text-base leading-relaxed text-[var(--text-muted)] md:text-lg">
-              {item.summary}
-            </p>
+          {bodyHtml ? (
+            <div
+              className="prose-portable"
+              dangerouslySetInnerHTML={{ __html: bodyHtml }}
+            />
           ) : (
             <p className="text-base text-[var(--text-dim)]">
               No additional details for this activity yet.

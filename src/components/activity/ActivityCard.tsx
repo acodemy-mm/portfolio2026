@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ActivityItem } from "@/lib/types";
+import { htmlToPlainText } from "@/lib/html";
 
 function formatActivityTime(date: string) {
   // Accept YYYY-MM-DD or YYYY-MM
@@ -47,7 +48,7 @@ export function ActivityCard({ item }: { item: ActivityItem }) {
         </h3>
         {item.summary ? (
           <p className="mt-2 line-clamp-3 flex-1 text-xs leading-relaxed text-[var(--text-muted)]">
-            {item.summary}
+            {htmlToPlainText(item.summary)}
           </p>
         ) : null}
         <time

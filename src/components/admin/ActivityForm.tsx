@@ -109,13 +109,18 @@ export function ActivityForm({ mode, initial }: Props) {
         </label>
         <label className="block md:col-span-2">
           <span className="mb-1.5 block text-xs uppercase tracking-wider text-[var(--text-dim)]">
-            Body text
+            Body (HTML)
+          </span>
+          <span className="mb-2 block text-xs text-[var(--text-muted)]">
+            Use HTML for headings, lists, links, and inline images. Plain text is
+            wrapped into paragraphs automatically.
           </span>
           <textarea
-            rows={4}
-            className={field}
+            rows={12}
+            className={`${field} font-mono text-sm`}
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
+            placeholder="<p>What shipped, and why it mattered.</p>"
           />
         </label>
         <label className="block md:col-span-2">

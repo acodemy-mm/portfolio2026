@@ -80,6 +80,7 @@ export type ActivityItem = {
   type: "ship" | "speak" | "write" | "award" | "milestone";
   title: string;
   date: string;
+  /** HTML or plain-text body rendered on the activity detail page */
   summary: string;
   /** Card thumbnail image */
   thumbnail?: string;

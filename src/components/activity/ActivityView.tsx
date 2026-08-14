@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ScrollReveal, Stagger, StaggerItem } from "@/components/motion/primitives";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { htmlToPlainText } from "@/lib/html";
 import type { ActivityItem } from "@/lib/types";
 
 function formatActivityTime(date: string) {
@@ -60,8 +61,8 @@ export function ActivityView({ items }: { items: ActivityItem[] }) {
                   {item.title}
                 </h3>
                 {item.summary ? (
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
-                    {item.summary}
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--text-muted)]">
+                    {htmlToPlainText(item.summary)}
                   </p>
                 ) : null}
                 <time
