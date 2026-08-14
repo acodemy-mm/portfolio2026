@@ -19,9 +19,12 @@ export default async function ArticlesPage() {
           subtitle="Notes on motion, systems, and shipping craft. Manage posts in Sanity Studio."
         />
       </ScrollReveal>
-      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <Stagger className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {articles.map((a) => (
-          <StaggerItem key={a._id}>
+          <StaggerItem
+            key={a._id}
+            className="flex h-[360px] max-h-[360px] flex-col overflow-hidden"
+          >
             <HoverCard
               href={`/articles/${a.slug}`}
               title={a.title}
@@ -29,9 +32,10 @@ export default async function ArticlesPage() {
               image={a.cover}
               layoutId={`article-cover-${a.slug}`}
               variant="landscape"
-              className="!w-full !max-w-none"
+              fill
+              className="min-h-0 flex-1 !w-full !max-w-none"
             />
-            <p className="mt-3 line-clamp-2 text-sm text-[var(--text-muted)]">
+            <p className="mt-3 line-clamp-2 shrink-0 text-sm text-[var(--text-muted)]">
               {a.excerpt}
             </p>
           </StaggerItem>

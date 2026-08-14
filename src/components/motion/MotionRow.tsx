@@ -111,6 +111,8 @@ type HoverCardProps = {
   className?: string;
   /** Netflix-style vertical poster (default on home rows) */
   variant?: "poster" | "landscape";
+  /** Fill the parent height instead of using a fixed aspect ratio */
+  fill?: boolean;
   brandMark?: string;
 };
 
@@ -122,6 +124,7 @@ export function HoverCard({
   layoutId,
   className,
   variant = "poster",
+  fill = false,
   brandMark = "N",
 }: HoverCardProps) {
   const prefersReduced = useReducedMotion();
@@ -131,15 +134,17 @@ export function HoverCard({
     <Link
       href={href}
       className={`group relative block shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
-        isPoster
-          ? "w-[28vw] max-w-[180px] sm:w-[20vw] sm:max-w-[200px] md:w-[14vw] md:max-w-[220px]"
-          : "w-[42vw] max-w-[280px] sm:w-[30vw] md:w-[22vw] md:max-w-[320px]"
+        fill
+          ? "h-full w-full"
+          : isPoster
+            ? "w-[28vw] max-w-[180px] sm:w-[20vw] sm:max-w-[200px] md:w-[14vw] md:max-w-[220px]"
+            : "w-[42vw] max-w-[280px] sm:w-[30vw] md:w-[22vw] md:max-w-[320px]"
       } ${className ?? ""}`}
     >
       <motion.div
         layoutId={layoutId}
         className={`relative overflow-hidden rounded-[2px] bg-[var(--surface)] ${
-          isPoster ? "aspect-[2/3]" : "aspect-[16/9]"
+          fill ? "h-full" : isPoster ? "aspect-[2/3]" : "aspect-[16/9]"
         }`}
         whileHover={
           prefersReduced
