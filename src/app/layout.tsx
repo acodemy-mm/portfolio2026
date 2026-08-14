@@ -21,14 +21,47 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+function getSiteUrl() {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  if (explicit) return explicit.replace(/\/$/, "");
+  const production = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (production) return `https://${production.replace(/\/$/, "")}`;
+  const preview = process.env.VERCEL_URL;
+  if (preview) return `https://${preview.replace(/\/$/, "")}`;
+  return "https://lynnhtet-drab.vercel.app";
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await getPortfolioData();
+  const title = `${settings.name} · ${settings.role}`;
+  const description = settings.summary || settings.tagline;
+  const ogImage = {
+    url: "/hero-bg.png",
+    width: 1024,
+    height: 576,
+    alt: `${settings.name} — ${settings.role}`,
+  };
+
   return {
+    metadataBase: new URL(getSiteUrl()),
     title: {
-      default: `${settings.name} · ${settings.role}`,
+      default: title,
       template: `%s · ${settings.name}`,
     },
     description: settings.tagline,
+    openGraph: {
+      type: "website",
+      siteName: settings.name,
+      title,
+      description,
+      images: [ogImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage.url],
+    },
   };
 }
 

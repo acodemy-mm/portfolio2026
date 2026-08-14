@@ -27,7 +27,7 @@ export function AboutView({
             <motion.img
               src={about.portrait}
               alt={settings.name}
-              className="aspect-[4/5] w-full object-cover"
+              className="aspect-[9/16] w-full object-cover object-top"
               initial={prefersReduced ? false : { scale: 1.08 }}
               whileInView={{ scale: 1 }}
               viewport={{ once: true }}
