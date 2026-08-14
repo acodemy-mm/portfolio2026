@@ -15,6 +15,77 @@ function slugify(input: string) {
 
 type Props = { mode: "create" | "edit"; initial?: Article };
 
+function FileField({
+  label,
+  hint,
+  required,
+  acceptMultiple,
+  previewUrl,
+  previewUrls,
+  onChange,
+  onRemoveGalleryIndex,
+}: {
+  label: string;
+  hint?: string;
+  required?: boolean;
+  acceptMultiple?: boolean;
+  previewUrl?: string;
+  previewUrls?: string[];
+  onChange: (files: FileList | null) => void;
+  onRemoveGalleryIndex?: (index: number) => void;
+}) {
+  return (
+    <label className="block md:col-span-2">
+      <span className="mb-1.5 block text-xs uppercase tracking-wider text-[var(--text-dim)]">
+        {label}
+        {required ? " (required)" : ""}
+      </span>
+      {hint ? (
+        <span className="mb-2 block text-xs text-[var(--text-muted)]">{hint}</span>
+      ) : null}
+      <input
+        type="file"
+        accept="image/*"
+        multiple={acceptMultiple}
+        required={required}
+        onChange={(e) => onChange(e.target.files)}
+        className="block w-full text-sm text-[var(--text-muted)] file:mr-3 file:rounded-sm file:border-0 file:bg-[var(--accent)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+      />
+      {previewUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={previewUrl}
+          alt=""
+          className="mt-3 aspect-video w-full max-w-md rounded-sm object-cover"
+        />
+      ) : null}
+      {previewUrls && previewUrls.length > 0 ? (
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+          {previewUrls.map((url, i) => (
+            <div key={`${url}-${i}`} className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt=""
+                className="aspect-[4/3] w-full rounded-sm object-cover"
+              />
+              {onRemoveGalleryIndex ? (
+                <button
+                  type="button"
+                  onClick={() => onRemoveGalleryIndex(i)}
+                  className="absolute right-1 top-1 rounded-sm bg-black/70 px-1.5 py-0.5 text-[10px] text-white"
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </label>
+  );
+}
+
 export function ArticleForm({ mode, initial }: Props) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title || "");
@@ -27,6 +98,10 @@ export function ArticleForm({ mode, initial }: Props) {
     initial?.publishedAt || new Date().toISOString().slice(0, 10),
   );
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [keptGallery, setKeptGallery] = useState<string[]>(
+    initial?.gallery || [],
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -35,11 +110,24 @@ export function ArticleForm({ mode, initial }: Props) {
     return initial?.cover || "";
   }, [coverFile, initial?.cover]);
 
+  const newGalleryPreviews = useMemo(
+    () => galleryFiles.map((f) => URL.createObjectURL(f)),
+    [galleryFiles],
+  );
+
   useEffect(() => {
     return () => {
       if (coverPreview.startsWith("blob:")) URL.revokeObjectURL(coverPreview);
     };
   }, [coverPreview]);
+
+  useEffect(() => {
+    return () => {
+      newGalleryPreviews.forEach((u) => {
+        if (u.startsWith("blob:")) URL.revokeObjectURL(u);
+      });
+    };
+  }, [newGalleryPreviews]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -54,7 +142,9 @@ export function ArticleForm({ mode, initial }: Props) {
     form.set("body", body);
     form.set("publishedAt", publishedAt);
     if (initial?.cover) form.set("coverUrl", initial.cover);
+    form.set("galleryUrls", JSON.stringify(keptGallery));
     if (coverFile) form.set("cover", coverFile);
+    galleryFiles.forEach((f) => form.append("gallery", f));
 
     try {
       const url =
@@ -150,36 +240,50 @@ export function ArticleForm({ mode, initial }: Props) {
         </label>
         <label className="block md:col-span-2">
           <span className="mb-1.5 block text-xs uppercase tracking-wider text-[var(--text-dim)]">
-            Body
+            Body (HTML)
+          </span>
+          <span className="mb-2 block text-xs text-[var(--text-muted)]">
+            Use HTML for headings, lists, links, and inline images. Plain text is
+            wrapped into paragraphs automatically.
           </span>
           <textarea
-            rows={10}
-            className={field}
+            rows={14}
+            className={`${field} font-mono text-sm`}
             value={body}
             onChange={(e) => setBody(e.target.value)}
+            placeholder="<p>Opening paragraph.</p>&#10;<h2>Section</h2>&#10;<p>More copy with <strong>emphasis</strong>.</p>"
           />
         </label>
-        <label className="block md:col-span-2">
-          <span className="mb-1.5 block text-xs uppercase tracking-wider text-[var(--text-dim)]">
-            Cover image
-            {mode === "create" && !initial?.cover ? " (required)" : ""}
-          </span>
-          <input
-            type="file"
-            accept="image/*"
-            required={mode === "create" && !initial?.cover}
-            onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-            className="block w-full text-sm text-[var(--text-muted)] file:mr-3 file:rounded-sm file:border-0 file:bg-[var(--accent)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
-          />
-          {coverPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={coverPreview}
-              alt=""
-              className="mt-3 aspect-video w-full max-w-md rounded-sm object-cover"
-            />
-          ) : null}
-        </label>
+
+        <div className="md:col-span-2 border-t border-white/10 pt-5">
+          <p className="mb-4 font-semibold text-white">Article photos</p>
+        </div>
+
+        <FileField
+          label="Cover image"
+          hint="Hero image at the top of the article detail page."
+          required={mode === "create" && !initial?.cover}
+          previewUrl={coverPreview}
+          onChange={(files) => setCoverFile(files?.[0] || null)}
+        />
+
+        <FileField
+          label="More photos"
+          hint="Additional images shown in the More photos section. You can select multiple."
+          acceptMultiple
+          previewUrls={[...keptGallery, ...newGalleryPreviews]}
+          onChange={(files) =>
+            setGalleryFiles(files ? Array.from(files) : [])
+          }
+          onRemoveGalleryIndex={(index) => {
+            if (index < keptGallery.length) {
+              setKeptGallery((prev) => prev.filter((_, i) => i !== index));
+            } else {
+              const fileIndex = index - keptGallery.length;
+              setGalleryFiles((prev) => prev.filter((_, i) => i !== fileIndex));
+            }
+          }}
+        />
       </div>
       {error ? <p className="text-sm text-red-400">{error}</p> : null}
       <div className="flex gap-3">

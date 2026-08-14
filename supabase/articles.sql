@@ -7,11 +7,15 @@ create table if not exists public.articles (
   cover text not null,
   excerpt text not null default '',
   body text not null default '',
+  gallery text[] not null default '{}',
   tags text[] not null default '{}',
   published_at text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.articles
+  add column if not exists gallery text[] not null default '{}';
 
 drop trigger if exists articles_set_updated_at on public.articles;
 create trigger articles_set_updated_at

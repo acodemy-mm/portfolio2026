@@ -16,6 +16,7 @@ type ArticleRow = {
   cover: string;
   excerpt: string;
   body: string;
+  gallery: string[] | null;
   tags: string[] | null;
   published_at: string;
   created_at: string;
@@ -29,6 +30,7 @@ function mapArticle(row: ArticleRow): Article {
     cover: row.cover,
     excerpt: row.excerpt,
     body: row.body,
+    gallery: row.gallery || [],
     tags: row.tags || [],
     publishedAt: row.published_at,
   };
@@ -63,6 +65,7 @@ export async function writeArticlesFile(items: Article[]) {
     cover: item.cover,
     excerpt: item.excerpt,
     body: item.body,
+    gallery: item.gallery || [],
     tags: item.tags || [],
     published_at: item.publishedAt,
   }));
@@ -99,6 +102,12 @@ export type ArticleInput = {
   body?: string;
   publishedAt?: string;
   coverUrl?: string;
+  galleryUrls?: string;
+};
+
+export type ArticleFiles = {
+  cover?: File | null;
+  gallery?: File[];
 };
 
 function parseTags(tags?: string) {
@@ -109,19 +118,36 @@ function parseTags(tags?: string) {
     .filter(Boolean);
 }
 
+function parseGalleryUrls(raw?: string): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed.filter((u): u is string => typeof u === "string");
+    }
+  } catch {
+    // fall through
+  }
+  return raw
+    .split(",")
+    .map((u) => u.trim())
+    .filter(Boolean);
+}
+
 function sortArticles(items: Article[]) {
   return [...items].sort((a, b) =>
     (b.publishedAt || "").localeCompare(a.publishedAt || ""),
   );
 }
 
-async function deleteCover(url?: string) {
-  await deleteAsset(url);
+async function deleteArticleUploads(article: Article) {
+  const urls = [article.cover, ...(article.gallery || [])].filter(Boolean);
+  await Promise.all(urls.map((url) => deleteAsset(url)));
 }
 
 export async function createArticle(
   input: ArticleInput,
-  coverFile?: File | null,
+  files: ArticleFiles = {},
 ): Promise<Article> {
   const storedRows = await readArticleRows();
   const articles = storedRows.map(mapArticle);
@@ -134,10 +160,19 @@ export async function createArticle(
   }
 
   let cover = input.coverUrl || "";
-  if (coverFile && coverFile.size > 0) {
-    cover = await uploadAsset(ARTICLES_BUCKET, coverFile, "articles");
+  if (files.cover && files.cover.size > 0) {
+    cover = await uploadAsset(ARTICLES_BUCKET, files.cover, "articles");
   }
   if (!cover) throw new Error("Cover image is required");
+
+  const gallery: string[] = [];
+  if (files.gallery?.length) {
+    for (const file of files.gallery) {
+      if (file.size > 0) {
+        gallery.push(await uploadAsset(ARTICLES_BUCKET, file, "articles"));
+      }
+    }
+  }
 
   const article: Article = {
     _id: randomUUID(),
@@ -146,6 +181,7 @@ export async function createArticle(
     cover,
     excerpt: (input.excerpt || "").trim(),
     body: (input.body || "").trim(),
+    gallery,
     tags: parseTags(input.tags),
     publishedAt:
       (input.publishedAt || "").trim() ||
@@ -163,6 +199,7 @@ export async function createArticle(
       cover: article.cover,
       excerpt: article.excerpt,
       body: article.body,
+      gallery: article.gallery,
       tags: article.tags,
       published_at: article.publishedAt,
     };
@@ -175,7 +212,7 @@ export async function createArticle(
 export async function updateArticle(
   id: string,
   input: ArticleInput,
-  coverFile?: File | null,
+  files: ArticleFiles = {},
 ): Promise<Article> {
   const storedRows = await readArticleRows();
   let items = storedRows.map(mapArticle);
@@ -190,13 +227,30 @@ export async function updateArticle(
   }
 
   let cover = existing.cover;
-  if (coverFile && coverFile.size > 0) {
-    const next = await uploadAsset(ARTICLES_BUCKET, coverFile, "articles");
-    await deleteCover(existing.cover);
+  if (files.cover && files.cover.size > 0) {
+    const next = await uploadAsset(ARTICLES_BUCKET, files.cover, "articles");
+    await deleteAsset(existing.cover);
     cover = next;
   } else if (input.coverUrl && input.coverUrl !== existing.cover) {
-    await deleteCover(existing.cover);
+    await deleteAsset(existing.cover);
     cover = input.coverUrl;
+  }
+
+  let gallery = existing.gallery ? [...existing.gallery] : [];
+  if (input.galleryUrls !== undefined) {
+    gallery = parseGalleryUrls(input.galleryUrls);
+  }
+  if (files.gallery?.length) {
+    for (const file of files.gallery) {
+      if (file.size > 0) {
+        gallery.push(await uploadAsset(ARTICLES_BUCKET, file, "articles"));
+      }
+    }
+  }
+
+  const previousGallery = existing.gallery || [];
+  for (const url of previousGallery) {
+    if (!gallery.includes(url)) await deleteAsset(url);
   }
 
   const updated: Article = {
@@ -207,6 +261,7 @@ export async function updateArticle(
     excerpt:
       input.excerpt !== undefined ? input.excerpt.trim() : existing.excerpt,
     body: input.body !== undefined ? input.body.trim() : existing.body,
+    gallery,
     tags: input.tags !== undefined ? parseTags(input.tags) : existing.tags,
     publishedAt:
       input.publishedAt !== undefined
@@ -225,6 +280,7 @@ export async function updateArticle(
       cover: updated.cover,
       excerpt: updated.excerpt,
       body: updated.body,
+      gallery: updated.gallery,
       tags: updated.tags,
       published_at: updated.publishedAt,
     };
@@ -247,5 +303,5 @@ export async function deleteArticle(id: string) {
     const { error } = await client.from("articles").delete().eq("id", id);
     if (error) throw new Error(`Could not delete article: ${error.message}`);
   }
-  await deleteCover(existing.cover);
+  await deleteArticleUploads(existing);
 }

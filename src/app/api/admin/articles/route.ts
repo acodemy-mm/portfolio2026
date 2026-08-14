@@ -5,8 +5,20 @@ import { revalidatePortfolioContent } from "@/lib/cache/portfolio";
 import {
   createArticle,
   readArticlesFile,
+  type ArticleFiles,
   type ArticleInput,
 } from "@/lib/data/articles";
+
+function filesFromForm(form: FormData): ArticleFiles {
+  const coverRaw = form.get("cover");
+  const galleryRaw = form.getAll("gallery");
+  return {
+    cover: coverRaw instanceof File && coverRaw.size > 0 ? coverRaw : null,
+    gallery: galleryRaw.filter(
+      (f): f is File => f instanceof File && f.size > 0,
+    ),
+  };
+}
 
 function inputFromForm(form: FormData): ArticleInput {
   return {
@@ -17,6 +29,7 @@ function inputFromForm(form: FormData): ArticleInput {
     body: String(form.get("body") || ""),
     publishedAt: String(form.get("publishedAt") || ""),
     coverUrl: String(form.get("coverUrl") || ""),
+    galleryUrls: String(form.get("galleryUrls") || ""),
   };
 }
 
@@ -37,9 +50,7 @@ export async function POST(request: Request) {
   }
   try {
     const form = await request.formData();
-    const cover = form.get("cover");
-    const coverFile = cover instanceof File && cover.size > 0 ? cover : null;
-    const article = await createArticle(inputFromForm(form), coverFile);
+    const article = await createArticle(inputFromForm(form), filesFromForm(form));
     revalidatePortfolioContent(article.slug);
     return NextResponse.json({ ok: true, article });
   } catch (err) {

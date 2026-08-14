@@ -92,7 +92,10 @@ export type Article = {
   slug: string;
   cover: string;
   excerpt: string;
+  /** HTML or plain-text body rendered on the article detail page */
   body: string;
+  /** Extra images shown in the More photos section */
+  gallery?: string[];
   tags: string[];
   publishedAt: string;
 };

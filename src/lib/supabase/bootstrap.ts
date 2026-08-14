@@ -202,6 +202,12 @@ export async function bootstrapSupabaseContent(force = false) {
       cover:
         (await migrateLocalAsset(article.cover, ARTICLES_BUCKET, "articles")) ||
         article.cover,
+      gallery: await Promise.all(
+        (article.gallery || []).map(
+          async (url) =>
+            (await migrateLocalAsset(url, ARTICLES_BUCKET, "articles")) || url,
+        ),
+      ),
     })),
   );
 

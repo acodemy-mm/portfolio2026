@@ -2,7 +2,8 @@
 
 import { motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import Link from "next/link";
-import { ScrollReveal } from "@/components/motion/primitives";
+import { ScrollReveal, Stagger, StaggerItem } from "@/components/motion/primitives";
+import { articleBodyToHtml } from "@/lib/html";
 import type { Article } from "@/lib/types";
 
 export function ArticleDetail({ article }: { article: Article }) {
@@ -13,6 +14,8 @@ export function ArticleDetail({ article }: { article: Article }) {
     damping: 30,
     restDelta: 0.001,
   });
+  const bodyHtml = articleBodyToHtml(article.body);
+  const gallery = article.gallery?.filter(Boolean) || [];
 
   return (
     <article>
@@ -53,11 +56,32 @@ export function ArticleDetail({ article }: { article: Article }) {
         <ScrollReveal>
           <p className="text-lg text-[var(--text-muted)]">{article.excerpt}</p>
         </ScrollReveal>
-        <ScrollReveal delay={0.08} className="prose-portable mt-8">
-          {article.body.split("\n\n").map((para) => (
-            <p key={para.slice(0, 32)}>{para}</p>
-          ))}
-        </ScrollReveal>
+        {bodyHtml ? (
+          <ScrollReveal delay={0.08} className="prose-portable mt-8">
+            <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+          </ScrollReveal>
+        ) : null}
+
+        {gallery.length > 0 ? (
+          <ScrollReveal className="mt-14">
+            <h2 className="mb-5 font-[family-name:var(--font-bebas)] text-3xl tracking-wide text-white">
+              More photos
+            </h2>
+            <Stagger className="grid gap-3 sm:grid-cols-2">
+              {gallery.map((src, i) => (
+                <StaggerItem key={`${src}-${i}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt={`${article.title} photo ${i + 1}`}
+                    className="aspect-[4/3] w-full rounded-sm object-cover"
+                  />
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </ScrollReveal>
+        ) : null}
+
         <ScrollReveal className="mt-12">
           <Link
             href="/articles"
