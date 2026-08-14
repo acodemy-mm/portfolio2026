@@ -9,8 +9,6 @@ const covers = {
   city: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3E5bElR4AyPXPLg8KbS3M5GrRWVPwVCqFd-Q7sv77Cg&s=10",
   product:
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDCBA99kT3nhgdSuPOwOgrqpGfsigC8xxZIKqnIpaHMA&s=10",
-  portrait:
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIQxq1bHMkBuSlgjxPs0T9HC_pQf0W72PJ4L_RaZrVew&s=10",
   article1:
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfYOGKkWgznxHFvW3E8eNUL8NDeO15WojyOg0g4VXkNw&s=10",
   article2:
@@ -32,7 +30,7 @@ export const seedData: PortfolioData = {
       { label: "Dribbble", url: "https://dribbble.com" },
       { label: "X", url: "https://x.com" },
     ],
-    resumePdfUrl: "/resume.pdf",
+    resumePdfUrl: "/api/resume",
     experiencePoster: "/experience-poster.png",
     summary:
       "A passionate UX designer with 5 years of experience creating user-centered interfaces and applications. Skilled in the entire design process, from user research and prototyping to usability testing and implementation. Equally enthusiastic about sharing knowledge and fostering the next generation of UX professionals.",
@@ -335,33 +333,47 @@ export const seedData: PortfolioData = {
   about: {
     headline: "I build products that feel inevitable.",
     bio: [
-      "I'm Lynn Htet Thant — a product designer and engineer who treats the interface like a cinematic experience without sacrificing clarity or accessibility.",
-      "Over eight years I've shipped consumer apps, fintech flows, developer tools, and media platforms. I care about the seam between Figma and production: tokens, motion, and code that stay in sync.",
-      "When I'm not designing, I'm writing about craft, mentoring designers who code, and chasing the perfect scroll-triggered reveal.",
+      "I'm Lynn Htet Thant — a product designer and A passionate UX designer with 5 years of experience creating user-centered interfaces and applications. Skilled in the entire design process, from user research and prototyping to usability testing and implementation. Equally enthusiastic about sharing knowledge and fostering the next generation of UX professionals. ",
+      "Proficient in creating intuitive, secure, and compliant interfaces that enhance the user experience, visually appealing interfaces for SaaS (Software as a Service) products and drive business growth.",
+      "I design with love a lot of web apps and mobile applications for various industries. I perform as a UX researcher, UX analyst, UX designer and UI designer passionately.",
     ],
-    portrait: covers.portrait,
+    portrait: "/about-portrait.png",
     values: [
       {
-        title: "Clarity first",
-        description: "Motion and visuals serve hierarchy — never the other way around.",
+        title: "Core Process",
+        description: "Usability Testing, User-Centered Design (UCD), Wireframing, Rapid Prototyping.",
       },
       {
-        title: "Ship the craft",
-        description: "I implement what I design so quality survives the handoff.",
+        title: "Technical Skills",
+        description: "Design Systems, AI Powered Design, Information Architecture.",
       },
       {
-        title: "Inclusive by default",
-        description: "WCAG, reduced motion, and keyboard paths are part of the brief.",
+        title: "Tools & Specs",
+        description: "Figma, Storybook, Design Tokens, Agentic, Front-End Frameworks.",
       },
     ],
   },
   education: [
-    {
-      _id: "ed1",
-      school: "Rhode Island School of Design",
-      degree: "BFA Graphic Design",
-      year: "2017",
-      details: "Focus in interaction design and typography",
-    },
+      {
+        _id: "ed1",
+        school: "Lincoln University College",
+        degree: "Master of Business Administration",
+        year: "2026-2028",
+        details: "The Master of Business Administration (MBA) course Open & Distance Learning Mode offered by Lincoln University College (LUC) produce highly qualified and professional workforce for the next wave of global economic activities",
+      },
+      {
+        _id: "ed2",
+        school: "University of Kyaukse",
+        degree: "Bechalor of Arts in History",
+        year: "2019",
+        details: "A Bachelor of Arts (BA) in History is a dynamic undergraduate degree focused on studying past human societies, cultures, political systems, and global transformations to better understand the modern world.",
+      },
+      {
+        _id: "ed3",
+        school: "RMIT College",
+        degree: "Diploma in Business IT",
+        year: "2024",
+        details: " A practical, career-focused qualification designed to bridge the gap between business operations and modern technology.",
+      },
   ],
 };

@@ -33,7 +33,7 @@ function formatRange(start: string, end?: string, current?: boolean) {
 export default async function ResumePage() {
   const { settings, experiences, skills, education } = await getPortfolioData();
   const skillNames = skills.map((s) => s.name).join(", ");
-  const pdfHref = settings.resumePdfUrl || "/resume.pdf";
+  const pdfHref = "/api/resume";
 
   return (
     <div className="resume-page mx-auto max-w-[800px] px-4 pb-20 pt-[calc(var(--nav-height)+2.5rem)] text-[var(--text)] md:px-8">
@@ -44,6 +44,7 @@ export default async function ResumePage() {
         <div className="flex gap-3">
           <a
             href={pdfHref}
+            download
             className="rounded-sm bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
           >
             Download PDF
