@@ -1,7 +1,3 @@
-"use client";
-
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useState, type FormEvent } from "react";
 import { ScrollReveal } from "@/components/motion/primitives";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import type { SiteSettings } from "@/lib/types";
@@ -13,35 +9,6 @@ export function ContactForm({
   settings: SiteSettings;
   embedded?: boolean;
 }) {
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
-    "idle",
-  );
-  const [message, setMessage] = useState("");
-  const prefersReduced = useReducedMotion();
-
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setStatus("loading");
-    const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form).entries());
-
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const json = (await res.json()) as { ok: boolean; message?: string };
-      if (!res.ok || !json.ok) throw new Error(json.message || "Failed");
-      setStatus("success");
-      setMessage(json.message || "Message sent.");
-      form.reset();
-    } catch (err) {
-      setStatus("error");
-      setMessage(err instanceof Error ? err.message : "Something went wrong.");
-    }
-  }
-
   return (
     <div
       id="contact"
@@ -54,72 +21,59 @@ export function ContactForm({
       <ScrollReveal>
         <SectionHeading
           title="Contact"
-          subtitle={`Say hello — ${settings.email} · ${settings.location}`}
+          subtitle="Reach out directly — happy to talk about product design, systems, and collaboration."
         />
       </ScrollReveal>
 
       <div className="grid gap-10 md:grid-cols-[1fr_0.85fr]">
         <ScrollReveal>
-          <form onSubmit={onSubmit} className="space-y-4">
-            <label className="block">
-              <span className="mb-1.5 block text-xs uppercase tracking-wider text-[var(--text-dim)]">
-                Name
-              </span>
-              <input
-                required
-                name="name"
-                className="w-full rounded-sm border border-white/15 bg-[var(--surface)] px-3 py-3 text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/30"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs uppercase tracking-wider text-[var(--text-dim)]">
-                Email
-              </span>
-              <input
-                required
-                type="email"
-                name="email"
-                className="w-full rounded-sm border border-white/15 bg-[var(--surface)] px-3 py-3 text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/30"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs uppercase tracking-wider text-[var(--text-dim)]">
-                Message
-              </span>
-              <textarea
-                required
-                name="message"
-                rows={6}
-                className="w-full resize-y rounded-sm border border-white/15 bg-[var(--surface)] px-3 py-3 text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/30"
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={status === "loading"}
-              className="rounded-sm bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)] active:scale-[0.97] disabled:opacity-60"
-            >
-              {status === "loading" ? "Sending…" : "Send message"}
-            </button>
+          <div className="rounded-sm border border-white/10 bg-[var(--surface)] p-6 md:p-8">
+            <p className="font-[family-name:var(--font-bebas)] text-2xl tracking-wide text-white">
+              Contact information
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
+              Prefer email for project inquiries, mentoring, or speaking. I usually
+              reply within a couple of days.
+            </p>
 
-            <AnimatePresence mode="wait">
-              {status === "success" || status === "error" ? (
-                <motion.p
-                  key={status}
-                  initial={prefersReduced ? false : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className={`text-sm ${status === "success" ? "text-emerald-400" : "text-red-400"}`}
-                >
-                  {status === "success" ? "✓ " : ""}
-                  {message}
-                </motion.p>
-              ) : null}
-            </AnimatePresence>
-          </form>
+            <dl className="mt-6 space-y-5">
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-[var(--text-dim)]">
+                  Name
+                </dt>
+                <dd className="mt-1.5 text-base text-white">{settings.name}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-[var(--text-dim)]">
+                  Email
+                </dt>
+                <dd className="mt-1.5">
+                  <a
+                    href={`mailto:${settings.email}`}
+                    className="text-base text-[var(--accent)] hover:underline"
+                  >
+                    {settings.email}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-[var(--text-dim)]">
+                  Location
+                </dt>
+                <dd className="mt-1.5 text-base text-white">{settings.location}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-[var(--text-dim)]">
+                  Role
+                </dt>
+                <dd className="mt-1.5 text-base text-white">{settings.role}</dd>
+              </div>
+            </dl>
+          </div>
         </ScrollReveal>
 
         <ScrollReveal delay={0.1}>
-          <div className="rounded-sm border border-white/10 bg-[var(--surface)] p-6">
+          <div className="rounded-sm border border-white/10 bg-[var(--surface)] p-6 md:p-8">
             <p className="font-[family-name:var(--font-bebas)] text-2xl tracking-wide text-white">
               Elsewhere
             </p>
